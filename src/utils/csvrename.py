@@ -37,7 +37,7 @@ if getattr(sys, 'frozen', False):
 else:
     base_dir = parent_dir
 
-def run_function(callback, dumps_path, uniform_slot_name, uniform_type, second_glove, photoshop_pref, pridesticker_pref, helmetnumbers_pref, ssnumbers_pref, only_make_csv):
+def run_function(callback, dumps_path, uniform_slot_name, uniform_type, team_glove, second_glove, photoshop_pref, pridesticker_pref, helmetnumbers_pref, ssnumbers_pref, only_make_csv, csv_source_file):
 
     # # Output the passed parameters
     # callback(f"Using dumps path: {dumps_path}\n")
@@ -50,7 +50,12 @@ def run_function(callback, dumps_path, uniform_slot_name, uniform_type, second_g
     # callback(f"Sleeve/Shoulder Numbers Preference: {ssnumbers_pref}\n")
 
     # Define the 'put_textures_here' source folder
-    source_folder = os.path.join(base_dir, "YOUR_TEXTURES_HERE")
+    if csv_source_file:
+      source_folder = os.path.join(base_dir, "csv-source")
+      source_folder_backup = os.path.join(base_dir, "YOUR_TEXTURES_HERE")
+    else:
+      source_folder = os.path.join(base_dir, "YOUR_TEXTURES_HERE")
+      source_folder_backup = ""
 
     # Define the 'renamed' folder
     renamed_folder = os.path.join(base_dir, "RENAMED")
@@ -60,6 +65,18 @@ def run_function(callback, dumps_path, uniform_slot_name, uniform_type, second_g
 
     # Define the CSV input folder
     csv_folder = os.path.join(base_dir, "csv-override")
+
+    # Define the CSV source folder
+    csv_source_folder = os.path.join(base_dir, "csv-source")
+
+    # If a source file is provided, map the texture names
+    source_lookup = {}
+    if csv_source_file:
+        with open(csv_source_file, newline='', encoding='utf-8') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                # Map TEXTURE column to FILENAME column
+                source_lookup[row['TEXTURE']] = row['FILENAME']
 
       # Add a line break 
       # Add a line break 
@@ -75,10 +92,15 @@ def run_function(callback, dumps_path, uniform_slot_name, uniform_type, second_g
 
     if os.path.isdir(csv_folder):
         csv_files = [f for f in os.listdir(csv_folder) if f.endswith('.csv')]
+        callback(f"CSV Override (Destination) File: {csv_files[0]}\n\n", "blue") 
     else:
         csv_files = []
+        callback(f"NO csv_files\n\n", "blue") 
 
     # Configuration settings stage...
+
+    if csv_source_file:
+      callback(f"CSV Source File: {csv_source_file}\n\n", "blue") 
 
     callback(f"+++++++++++++++++++++++ CONFIGURATION SETTINGS +++++++++++++++++++++++\n\n", "blue") 
 
@@ -103,7 +125,17 @@ def run_function(callback, dumps_path, uniform_slot_name, uniform_type, second_g
         callback(f"\n|              The files in YOUR_TEXTURES_HERE will be converted to Photoshop names. \n", "green")
     callback(f"\n#ˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉ#\n")
     
-
+    # Function to find the source files recursively 
+    def find_file_recursive(base_folder, filename):
+        filename = filename.strip().lower()
+        for root, _, files in os.walk(base_folder):
+            files_lower = [f.lower().strip() for f in files]
+            # callback(f"Checking {root}, files: {files}\n")
+            if filename in files_lower:
+                # return original cased path
+                index = files_lower.index(filename)
+                return os.path.join(root, files[index])
+        return None
 
     # Function to rename files to photoshop naming convention if made with photopea
     def rename_photopea_files(source_folder, texture_name_mapping, texture_name_mapping_old):
@@ -242,6 +274,9 @@ def run_function(callback, dumps_path, uniform_slot_name, uniform_type, second_g
     # Extract ssnumbers_pref from the config
     ssnumbers_pref = convert_to_boolean(ssnumbers_pref)
 
+    # Extract ssnumbers_pref from the config
+    team_glove = convert_to_boolean(team_glove)
+
     # Define the transparent file and check if it exists
     transparent_source_path = os.path.join(default_textures_folder, 'transparent.png')
 
@@ -309,25 +344,25 @@ def run_function(callback, dumps_path, uniform_slot_name, uniform_type, second_g
         'pants.png'
     ]
 
-    # Check if all required textures exist
-    missing_required_textures = [file for file in required_textures_to_check if not os.path.exists(os.path.join(source_folder, file))]
+    # # Check if all required textures exist
+    # missing_required_textures = [file for file in required_textures_to_check if not os.path.exists(os.path.join(source_folder, file))]
 
-    if not missing_required_textures:
-        callback(f"All required textures exist in the YOUR_TEXTURES_HERE folder. ")
-        callback(f"{checkmark}\n", "green")
-    else:
-        callback("\n")
-        callback(f"###########################################################\n")
-        callback(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n", "red")
-        callback(f"!!! ERROR: ", "red")
-        callback(f"The following required source textures are missing from\n")
-        callback(f"the YOUR_TEXTURES_HERE folder:\n\n")
-        for missing_file in missing_required_textures:
-            callback(f"- {missing_file}\n")
-        callback(f"\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n", "red")
-        callback(f"###########################################################\n")
-        # Pause for a thousand minutes
-        time.sleep(1000 * 60)
+    # if not missing_required_textures:
+    #     callback(f"All required textures exist in the YOUR_TEXTURES_HERE folder. ")
+    #     callback(f"{checkmark}\n", "green")
+    # else:
+    #     callback("\n")
+    #     callback(f"###########################################################\n")
+    #     callback(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n", "red")
+    #     callback(f"!!! ERROR: ", "red")
+    #     callback(f"The following required source textures are missing from\n")
+    #     callback(f"the YOUR_TEXTURES_HERE folder:\n\n")
+    #     for missing_file in missing_required_textures:
+    #         callback(f"- {missing_file}\n")
+    #     callback(f"\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n", "red")
+    #     callback(f"###########################################################\n")
+    #     # Pause for a thousand minutes
+    #     time.sleep(1000 * 60)
 
 
     # Initialize a set to store unique texture names from the CSV file
@@ -396,18 +431,231 @@ def run_function(callback, dumps_path, uniform_slot_name, uniform_type, second_g
             
             # Function to handle the sleeve/shoulder and helmet numbers logic
             def copy_numbers(source_folder, subfolder_path, filename, texture, main_texture):
-                source_path = os.path.join(source_folder, texture)
-                destination_path = os.path.join(subfolder_path, filename)
+                # Lookup the mapped filename from source CSV
+                if csv_source_file and texture in source_lookup:
+                    mapped_filename = source_lookup[texture].strip()
+                    # callback(f"Looking for {mapped_filename} in {source_folder}...\n")
+                    found_path = find_file_recursive(csv_source_folder, mapped_filename)  # search for mapped FILENAME
+                    # callback(f"Results: {found_path}\n")
+                    if found_path:
+                        source_path = found_path
+                    else:
+                        # fallback: maybe use the original texture
+                        # source_path = os.path.join(source_folder, texture)
+                        if texture in ("num07helmet.png", "num07ss.png"):
+                          mapped_filename = source_lookup["num07.png"].strip()
+                        elif texture in ("num89helmet.png", "num89ss.png"):
+                          mapped_filename = source_lookup["num89.png"].strip()
+                        callback(f"• {texture} – No exact match for mapped name in 'csv-source' ...\n")
+                        callback(f"• {texture} – Looking for '{texture}' fallback in 'csv-source'...\n")
+                        if find_file_recursive(csv_source_folder, texture):
+                          source_path = find_file_recursive(csv_source_folder, texture)
+                          # callback(f"• {texture} – source_path: {source_path}\n")
+                          # callback(f"• {texture} – Found! {source_path}\n")
+                        else:
+                          callback(f"• {texture} – Not found. Using main number texture: {mapped_filename}\n")
+                          source_path = find_file_recursive(csv_source_folder, mapped_filename)
+                else:
+                    source_path = os.path.join(source_folder, texture)
+                # Put them in subfolders
+                if texture in ("num07ss.png", "num89ss.png"):
+                  num_folder = "nums-shoulder"
+                elif texture in ("num07helmet.png", "num89helmet.png"): 
+                  num_folder = "nums-helmet"
+                else:
+                  num_folder = ""
+                destination_path = os.path.join(subfolder_path, num_folder, filename)
+                # callback(f"Destination path: {destination_path}\n")
+
+                # ✅ Ensure the destination directory exists
+                os.makedirs(os.path.dirname(destination_path), exist_ok=True)
 
                 if not os.path.exists(source_path):
                     source_path = os.path.join(source_folder, main_texture)
-                    output = f" (using main {main_texture})"
+                    callback(f"Using main texture: {main_texture}\n")
                 else:
-                    output = ".png"
+                    output = ""
 
+                # callback(f"Trying copy file...\n")
                 shutil.copy2(source_path, destination_path)
+                textures_processed.append(texture)
                 callback(f"{checkmark} ", "green")
                 callback(f"{texture}{output} copied and renamed.\n")
+
+            def get_glove_path(
+                    source_folder,
+                    source_folder_backup,
+                    source_image,
+                    csv_source_folder=None,
+                    source_lookup=None,
+                    mode="uniform_1"
+                ):
+                    """
+                    Determine the correct glove source file path with this priority:
+
+                      1. CSV mapping for the exact source_image
+                      2. Direct match in csv_source
+                      3. CSV mapping for all fallbacks
+                      4. Direct fallback match in YOUR_TEXTURES_HERE
+
+                    Returns a path string or "NOT_FOUND".
+                    """
+
+                    def safe_exists(p):
+                        return isinstance(p, (str, bytes, os.PathLike)) and os.path.exists(p)
+
+                    try:
+                        # Normalize key
+                        src_key = source_image.lower().strip() if source_image else ""
+                        # callback(f"• {source_image} - Trying CSV exact mapping...\n")
+
+                        # -------------------------------------------------------
+                        # 1️⃣ MAPPED MATCH: CSV MAPPING
+                        # -------------------------------------------------------
+                        if csv_source_folder and source_lookup and src_key in source_lookup:
+                            mapped_filename = source_lookup[src_key].strip()
+                            path = find_file_recursive(csv_source_folder, mapped_filename)
+                            if path and safe_exists(path):
+                                # callback(f"• {source_image} - Found CSV mapping: → {mapped_filename}\n")
+                                return path
+
+                        # -------------------------------------------------------
+                        # 2️⃣ EXACT MATCH: CSV_SOURCE FOLDER
+                        # -------------------------------------------------------
+                        callback(f"• {source_image} - No exact match for mapped name in 'csv-source'...\n")
+                        callback(f"• {source_image} - Looking for '{source_image}' fallback in 'csv_source'...\n")
+                        if source_image:
+                            candidate = os.path.join(csv_source_folder, source_image)
+                            if safe_exists(candidate):
+                                # callback(f"Found exact match in YOUR_TEXTURES_HERE.\n")
+                                return candidate
+
+                        # -------------------------------------------------------
+                        # Build fallback list based on mode
+                        # -------------------------------------------------------
+                        if mode == "team_1":
+                            fallbacks = ["gloveteam1.png","glove-team.png","gloveteam.png","glove.png"]
+
+                        elif mode == "team_2":
+                            fallbacks = ["gloveteam2.png","glove-team.png","gloveteam.png","glove.png"]
+
+                        elif mode == "uniform_1":
+                            fallbacks = [
+                                "gloveuni1.png","glove-uni.png","gloveuni.png","glove-uni-2.png","gloveuni2.png",
+                                "glove-team-1.png","gloveteam1.png","glove-team.png","gloveteam.png","glove.png"
+                            ]
+
+                        elif mode == "uniform_2":
+                            fallbacks = [
+                                "gloveuni2.png","glove-uni.png","gloveuni.png","glove-uni-1.png","gloveuni1.png",
+                                "glove-team-2.png","gloveteam2.png","glove-team-1.png","gloveteam1.png","glove-team.png",
+                                "gloveteam.png","glove.png"
+                            ]
+
+                        elif mode == "second_uni_1":
+                            fallbacks = [
+                                "glove-uni-1.png","gloveuni1.png",
+                                "glove-uni.png","gloveuni.png",
+                                "glove-uni-2.png","gloveuni2.png",
+                                "glove-team-1.png","gloveteam1.png",
+                                "glove-team-2.png","gloveteam2.png",
+                                "glove-team.png","gloveteam.png","glove.png"
+                            ]
+
+                        elif mode == "second_uni_2":
+                            fallbacks = [
+                                "glove-uni-2.png","gloveuni2.png",
+                                "glove-uni.png","gloveuni.png",
+                                "glove-uni-1.png","gloveuni1.png",
+                                "glove-team-2.png","gloveteam2.png",
+                                "glove-team-1.png","gloveteam1.png",
+                                "glove-team.png","gloveteam.png","glove.png"
+                            ]
+
+                        else:
+                            fallbacks = []
+
+                        # -------------------------------------------------------
+                        # 3️⃣ FALLBACK MATCHES IN CSV MAPPINGS
+                        # -------------------------------------------------------
+                        callback(f"• {source_image} - Trying CSV fallback mappings...\n")
+                        if csv_source_folder and source_lookup:
+                            for fb in fallbacks:
+                                fb_key = fb.lower().strip()
+                                # callback(f"Checking fallback: {fb}\n")
+
+                                if fb_key in source_lookup:
+                                    mapped_filename = source_lookup[fb_key].strip()
+                                    path = find_file_recursive(csv_source_folder, mapped_filename)
+                                    if path and safe_exists(path):
+                                        # callback(f"Found CSV fallback: {fb} → {mapped_filename}\n")
+                                        return path
+
+                        # -------------------------------------------------------
+                        # 4️⃣ FALLBACK MATCHES IN CSV_SOURCE FOLDER
+                        # -------------------------------------------------------
+                        callback(f"• {source_image} - Trying fallback matches (Eg. glove.png) in 'csv-source'...\n")
+
+                        for fb in fallbacks:
+                            candidate = os.path.join(csv_source_folder, fb)
+                            if safe_exists(candidate):
+                                # callback(f"Found fallback match in 'csv-source': {fb}\n")
+                                return candidate
+
+                        # -------------------------------------------------------
+                        # NOTHING FOUND
+                        # -------------------------------------------------------
+                        callback(f"• {source_image} - No glove source found.\n")
+                        return "NOT_FOUND"
+
+                    except Exception as e:
+                        callback(f"• {source_image} - Error in get_glove_path(): {e}\n")
+                        return "NOT_FOUND"
+
+
+
+
+            textures_processed = []
+            textures_required = [
+                "06-TC_Face_Protector.png",
+                "25-TC_Face_Protector_Top.png",
+                "14-Bk_TC_Pad.png",
+                "10-Wt_TC_Pad.png",
+                "07-TC_Med_Band--34_sleeve_top.png",
+                "04-TC_Thin_Band.png",
+                "15-TC_Long_Sleeve.png",
+                "wrist_QB_Wrist_Bk.png",
+                "wrist_QB_Wrist_Wt.png",
+                "03-TC_QB_Wrist.png",
+                "01-TC_Wrist.png",
+                "wrist_Half_Sleeve_Wt.png",
+                "wrist_Half_Sleeve_Bk.png",
+                "11-TC_Half_Sleeve.png",
+                "16-Shoe.png",
+                "17-Shoe_w_White_Tape.png",
+                "23-Shoe_w_Black_Tape.png",
+                "24-Shoe_w_TC_Tape.png",
+                "13-Sock.png",
+                "helmet.png",
+                "22-Chinstrap.png",
+                "pridesticker.png",
+                "18-Facemask_Far.png",
+                "20-Facemask_Near.png",
+                "pants.png",
+                "jersey.png",
+                "num07.png",
+                "num89.png",
+                "num07shadow.png",
+                "num89shadow.png",
+                "num07helmet.png",
+                "num89helmet.png",
+                "num07ss.png",
+                "num89ss.png",
+                "glove-uni-1.png",
+                "glove-uni-2.png",
+                "glove-uni-1.png",
+                "glove-uni-2.png"
+            ]
 
             # Iterate over the rows in the CSV file
             for row in csv_reader:
@@ -425,6 +673,7 @@ def run_function(callback, dumps_path, uniform_slot_name, uniform_type, second_g
                     os.makedirs(num07_shadow_folder, exist_ok=True)
                     transparent_destination_path = os.path.join(num07_shadow_folder, filename)
                     shutil.copy2(transparent_source_path, transparent_destination_path)
+                    textures_processed.append("num07shadow.png")
                     callback(f"{checkmark} ", "green")
                     callback(f"num07shadow (transparented) copied and renamed.\n")
                 elif texture == 'num89shadow.png':
@@ -432,6 +681,7 @@ def run_function(callback, dumps_path, uniform_slot_name, uniform_type, second_g
                     os.makedirs(num89_shadow_folder, exist_ok=True)
                     transparent_destination_path = os.path.join(num89_shadow_folder, filename)
                     shutil.copy2(transparent_source_path, transparent_destination_path)
+                    textures_processed.append("num89shadow.png")
                     callback(f"{checkmark} ", "green")
                     callback(f"num89shadow (transparented) copied and renamed.\n")
                 
@@ -440,70 +690,164 @@ def run_function(callback, dumps_path, uniform_slot_name, uniform_type, second_g
                     if ssnumbers_pref:
                         copy_numbers(source_folder, subfolder_path, filename, 'num07ss.png', 'num07.png')
                     else:
+                        textures_processed.append(texture)
                         callback("- Skipped num07ss.png.\n")
                 # Num89ss
                 elif texture == 'num89ss.png':
                     if ssnumbers_pref:
                         copy_numbers(source_folder, subfolder_path, filename, 'num89ss.png', 'num89.png')
                     else:
+                        textures_processed.append(texture)
                         callback("- Skipped num89ss.png.\n")
                 # Num07helmet
                 elif texture == 'num07helmet.png':
                     if helmetnumbers_pref:
                         copy_numbers(source_folder, subfolder_path, filename, 'num07helmet.png', 'num07.png')
                     else:
+                        textures_processed.append(texture)
                         callback("- Skipped num07helmet.png\n")
                 # Num89helmet
                 elif texture == 'num89helmet.png':
                     if helmetnumbers_pref:
                         copy_numbers(source_folder, subfolder_path, filename, 'num89helmet.png', 'num89.png')
                     else:
+                        textures_processed.append(texture)
                         callback("- Skipped num89helmet.png\n")
                 
 
-                # Glove
-                elif texture == 'glove.png':
+                # Glove Uniform 1
+                elif texture == 'glove-uni-1.png':
                     if type == "dark":
-                        glove_subfolder = "glove-home"
+                        glove_subfolder = "glove-uni-1-home"
                     else:
-                        glove_subfolder = "glove-away"
+                        glove_subfolder = "glove-uni-1-away"
 
-                    glove_path = os.path.join(source_folder, texture)
                     glove_folder = os.path.join(subfolder_path, glove_subfolder)
                     destination_path = os.path.join(subfolder_path, glove_subfolder, filename)
-                    # Check if source_image exists
-                    if os.path.exists(glove_path):
-                        os.makedirs(glove_folder, exist_ok=True)
-                        shutil.copy2(glove_path, destination_path)
-                        callback(f"{checkmark} ", "green")
-                        callback(f"glove.png copied and renamed.\n")
-                    else:
-                        # Print error message
+                    # Check if source_image exists and use fallbacks if needed
+                    # callback(f"Attempting to get glove path for {texture}...\n")
+                    # callback(f"attempting to define glove_path with source_folder_backup: {source_folder_backup}...\n")
+                    glove_path = get_glove_path(
+                        source_folder,
+                        source_folder_backup,
+                        texture,
+                        csv_source_folder=csv_source_folder,
+                        source_lookup=source_lookup,
+                        mode="uniform_1"
+                    )
+                    # callback(f"glove_path: {glove_path}\n")
+                    uniform_1_path = glove_path  # store for second_uni_1
+                    # Handle NOT_FOUND or missing file safely
+                    if glove_path == "NOT_FOUND" or not os.path.exists(glove_path):
                         callback(f"- ", "red")
-                        callback(f"Skipped. Glove in CSV but no glove.png source in YOUR_TEXTURES folder.\n")
+                        callback(
+                            f"Skipped. Uniform glove 1 in CSV but no glove-uni-1.png source found (or missing row from source CSV, if used).\n"
+                        )
+                    else:
+                      # Check if source_image exists
+                      if os.path.exists(glove_path):
+                          os.makedirs(glove_folder, exist_ok=True)
+                          shutil.copy2(glove_path, destination_path)
+                          textures_processed.append(texture)
+                          callback(f"{checkmark} ", "green")
+                          callback(f"glove-uni-1.png copied and renamed.\n")
+                      else:
+                          # Print error message
+                          callback(f"- ", "red")
+                          callback(f"Skipped. Uniform glove 1 in CSV but no glove-uni-1.png source found (or missing row from source CSV, if used).\n")
                 
-                # Glove Second
-                elif texture == 'glove-second.png':
+                # Glove Uniform 2
+                elif texture == 'glove-uni-2.png':
                     if type == "dark":
-                        glove_subfolder = "glove-away"
+                        glove_subfolder = "glove-uni-2-home"
                     else:
-                        glove_subfolder = "glove-home"
+                        glove_subfolder = "glove-uni-2-away"
 
-                    glove_path = os.path.join(source_folder, texture)
                     glove_folder = os.path.join(subfolder_path, glove_subfolder)
                     destination_path = os.path.join(subfolder_path, glove_subfolder, filename)
-                    # Check if source_image exists
-                    if os.path.exists(glove_path):
+                    # Check if source_image exists and use fallbacks if needed
+                    # callback(f"Attempting to get glove path for {texture}...\n")
+                    glove_path = get_glove_path(
+                        source_folder,
+                        source_folder_backup,
+                        texture,
+                        csv_source_folder=csv_source_folder,
+                        source_lookup=source_lookup,
+                        mode="uniform_2"
+                    )
+                    uniform_2_path = glove_path  # store for second_uni_2
+                    # Handle NOT_FOUND or missing file safely
+                    if glove_path == "NOT_FOUND" or not os.path.exists(glove_path):
+                        callback(f"- ", "red")
+                        callback(
+                            f"Skipped. Uniform glove 2 in CSV but no glove-uni-2.png source found (or missing row from source CSV, if used).\n"
+                        )
+                    else:
+                      # Check if source_image exists
+                      if os.path.exists(glove_path):
+                          os.makedirs(glove_folder, exist_ok=True)
+                          shutil.copy2(glove_path, destination_path)
+                          textures_processed.append(texture)
+                          callback(f"{checkmark} ", "green")
+                          callback(f"glove-uni-2.png copied and renamed.\n")
+                      else:
+                          # Print error message
+                          callback(f"- ", "red")
+                          callback(f"Skipped. Uniform glove 2 in CSV but no glove-uni-2.png source found (or missing row from source CSV, if used).\n")
+                
+              
+                # Second Glove Uniform 1
+                elif texture == 'glove-uni-1-second.png':
+                    if type == "dark":
+                        glove_subfolder = "glove-uni-1-away"
+                    else:
+                        glove_subfolder = "glove-uni-1-home"
+
+                    glove_folder = os.path.join(subfolder_path, glove_subfolder)
+                    destination_path = os.path.join(glove_folder, filename)
+
+                    # Reuse the path found for uniform_1
+                    glove_path = uniform_1_path  
+
+                    if glove_path == "NOT_FOUND" or not os.path.exists(glove_path):
+                        callback(f"- ", "red")
+                        callback(
+                            "Skipped. Second Uniform glove 1 in CSV but no glove-uni-1.png source found.\n"
+                        )
+                    else:
                         os.makedirs(glove_folder, exist_ok=True)
                         shutil.copy2(glove_path, destination_path)
+                        textures_processed.append(texture)
                         callback(f"{checkmark} ", "green")
-                        callback(f"glove-second.png copied and renamed.\n")
+                        callback("glove-uni-1.png (opposite version) copied and renamed.\n")
+
+                # Second Glove Uniform 2
+                elif texture == 'glove-uni-2-second.png':
+                    if type == "dark":
+                        glove_subfolder = "glove-uni-2-away"
                     else:
-                        # Print error message
+                        glove_subfolder = "glove-uni-2-home"
+
+                    glove_folder = os.path.join(subfolder_path, glove_subfolder)
+                    destination_path = os.path.join(glove_folder, filename)
+
+                    # Reuse the path found for uniform_2
+                    glove_path = uniform_2_path  
+
+                    if glove_path == "NOT_FOUND" or not os.path.exists(glove_path):
                         callback(f"- ", "red")
-                        callback(f"Skipped. Glove-second in CSV but no glove-second.png source in YOUR_TEXTURES folder.\n")
-                      
-                        
+                        callback(
+                            "Skipped. Second Uniform glove 2 in CSV but no glove-uni-2.png source found.\n"
+                        )
+                    else:
+                        os.makedirs(glove_folder, exist_ok=True)
+                        shutil.copy2(glove_path, destination_path)
+                        textures_processed.append(texture)
+                        callback(f"{checkmark} ", "green")
+                        callback("glove-uni-2.png (opposite version) copied and renamed.\n")
+
+                                                          
+                                            
                 
                 
                 # Pride Sticker
@@ -525,16 +869,15 @@ def run_function(callback, dumps_path, uniform_slot_name, uniform_type, second_g
                             callback(f" You want to use a pride sticker but no pridesticker.png source file exists in YOUR_TEXTURES. Add the source file and try again, or choose 'no' for the Pride Sticker preference next time.\n")
                             callback(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n", "red")
                             callback(f"###########################################################\n")
-                            # Wait for user to press enter
-                            callback("Press Enter to exit the program.\n")
-                            # input()
-                            # sys.exit()
+                            # Pause for a thousand minutes
+                            time.sleep(1000 * 60)
                         
                     else:
                         pridesticker_source_path = os.path.join(default_textures_folder, 'transparent.png')
                         pridesticker_output = " (transparented)"
                     transparent_destination_path = os.path.join(pridesticker_folder, filename)
                     shutil.copy2(pridesticker_source_path, transparent_destination_path)
+                    textures_processed.append(texture)
                     callback(f"{checkmark} ", "green")
                     callback(f"pridesticker{pridesticker_output} copied and renamed.\n")
                 
@@ -547,7 +890,25 @@ def run_function(callback, dumps_path, uniform_slot_name, uniform_type, second_g
                         source_path = os.path.join(default_textures_folder, texture)
                     else:
                         # Construct source path for regular cases
-                        source_path = os.path.join(source_folder, texture)
+                        # Lookup the mapped filename from source CSV
+                        if csv_source_file and texture in source_lookup:
+                            mapped_filename = source_lookup[texture].strip()
+                            # callback(f"Looking for {mapped_filename} in {source_folder}...\n")
+                            found_path = find_file_recursive(csv_source_folder, mapped_filename)  # search for mapped FILENAME
+                            # callback(f"Results: {found_path}\n")
+                            if found_path:
+                                source_path = found_path
+                                texture_name = mapped_filename
+                                final_source_folder = csv_source_folder
+                            else:
+                                # fallback: maybe use the original texture
+                                source_path = os.path.join(source_folder, texture)
+                                texture_name = mapped_filename
+                                final_source_folder = csv_source_folder
+                        else:
+                            source_path = os.path.join(source_folder, texture)
+                            texture_name = texture
+                            final_source_folder = source_folder
 
                     # Construct destination path
                     destination_path = os.path.join(subfolder_path, filename)
@@ -555,16 +916,17 @@ def run_function(callback, dumps_path, uniform_slot_name, uniform_type, second_g
                     # Copy the file to the destination with the specified filename
                     if os.path.exists(source_path):
                         shutil.copy2(source_path, destination_path)
+                        textures_processed.append(texture)
                         callback(f"{checkmark} ", "green")
                         callback(f"{texture} copied and renamed.\n")
                     else:
                         callback(f"- ", "red")
-                        callback(f" {texture} in CSV but no source in YOUR_TEXTURES folder\n")
+                        callback(f" {texture} in CSV but no source file found in source folder.\n")
                         callback("\n")
                         callback(f"###########################################################\n")
                         callback(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n", "red")
                         callback(f"!!! ERROR: ", "red")
-                        callback(f"Missing {texture} in the YOUR_TEXTURES_HERE folder.\n")
+                        callback(f"Missing {texture_name} from:\n{source_folder}\n")
                         callback(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n", "red")
                         callback(f"###########################################################\n")
                         # Delete the incomplete folder
@@ -588,25 +950,36 @@ def run_function(callback, dumps_path, uniform_slot_name, uniform_type, second_g
         callback(f"\n{checkmark} ")
         callback(f"CSV file copied to subfolder > csv-texture-names.\n")
 
-    
-    # Add a line break 
-    callback("\n")
-    callback("\n")
-    callback("#--------------------------------------------------------------#\n")
-    callback(f"#                         ")
-    callback(f"SUCCESS!", "green")
-    callback(f"                             #\n")
-    callback("#             All files were copied and renamed                #\n")
-    callback("#                  according to the CSV data.                  #\n")
-    callback("#                                                              #\n")
-    callback("#       READ ALL OF THE OUTPUT ABOVE TO CHECK FOR ISSUES.      #\n")
-    callback("#      Your renamed textures are in a subfolder of RENAMED.    #\n")
-    callback("#      The source CSV file was also copied to that folder.     #\n")
-    callback("#  Be sure to leave the CSV file in the folder and submit it   #\n")
-    callback("#                                                              #\n")
-    callback("################################################################\n\n")
-      # Add a line break 
-      # Add a line break 
+    # Check if missing any required textures
+    missing_textures = [t for t in textures_required if t not in textures_processed]
+
+    if missing_textures:
+        callback("\n")
+        callback("\n")
+        callback("#--------------------------------------------------------------#\n")
+        callback(f"#                         ")
+        callback(f"WARNING!", "yellow")
+        callback(f"                            #\n")
+        callback("#                Some required textures are missing.           #\n")
+        callback("#--------------------------------------------------------------#\n")
+        callback(f"#  Missing ({len(missing_textures)}): {', '.join(missing_textures)}\n")
+        callback("#--------------------------------------------------------------#\n\n")
+    else:
+        callback("\n")
+        callback("\n")
+        callback("#--------------------------------------------------------------#\n")
+        callback(f"#                         ")
+        callback(f"SUCCESS!", "green")
+        callback(f"                             #\n")
+        callback("#             All files were copied and renamed                #\n")
+        callback("#                  according to the CSV data.                  #\n")
+        callback("#                                                              #\n")
+        callback("#       READ ALL OF THE OUTPUT ABOVE TO CHECK FOR ISSUES.      #\n")
+        callback("#      Your renamed textures are in a subfolder of RENAMED.    #\n")
+        callback("#      The source CSV file was also copied to that folder.     #\n")
+        callback("#  Be sure to leave the CSV file in the folder and submit it   #\n")
+        callback("#                                                              #\n")
+        callback("################################################################\n\n")
 
     ############################################################################
     def find_duplicate_png_files(folder):

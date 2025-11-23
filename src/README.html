@@ -105,16 +105,18 @@
         
         <h2 id="prep">PREPARING YOUR TEXTURES (For both renaming methods):</h2>
         <h3>STEP 1.</h3>
-        <p>Copy all of the exported PNG files from the <strong>TC Gear</strong> template into the "<strong>YOUR_TEXTURES_HERE</strong>" folder.</p>
+        <p>Copy all of the exported PNG files from the <strong>TC Gear</strong> template into the "<strong>YOUR_TEXTURES_HERE</strong>" folder. NEW: As of V16.1, the three taped shoes no longer need to be taped shoes! You can use normal shoe textures to add variety to your team's shoes. See the list in step 1b for our recommendations on how to use them for consistency across the mod.</p>
         <p class="note">ℹ️ NOTE: For common textures like a white or gray facemask or a white chinstrap, copy these from the 'default-textures' folder and overwrite the files you just put into YOUR_TEXTURES_HERE. In the case of a white chinstrap, this is easier than doing a whole new TC Gear export. Also, in the case of the facemasks, the colors have been fine tuned to make them look more realistic. A white facemask from a white TC Gear export will be too bright.</p>
-        <h3>Step 1B. (only required for users of the LITE or XLITE TC Gear Template)</h3>
+        <h3>Step 1b. (only required for users of the LITE or XLITE TC Gear Template)</h3>
         <p>Create your <strong>shoe textures</strong> using the cleats template, rename them as below, and copy them into YOUR_TEXTURES_HERE, overwriting the existing files. This step is <strong>not</strong> required if you used the FULL version of the TC Gear template.</p>
         <ul>
             <li>16-Shoe.png</li>
-            <li>17-Shoe_w_White_Tape.png</li>
-            <li>23-Shoe_w_Black_Tape.png</li>
-            <li>24-Shoe_w_TC_Tape.png</li>
+            <li>17-Shoe_w_White_Tape.png * (Rec: use for a taped shoe)</li>
+            <li>23-Shoe_w_Black_Tape.png * (Rec: use for alt/inverse color normal shoe)</li>
+            <li>24-Shoe_w_TC_Tape.png * (Rec: use for a team/bright color normal shoe)</li>
         </ul>
+        <p>*NOTE: As of V16.1, these no longer need to be taped shoes! You can use normal shoe textures to add variety to your team's shoes. </p>
+
         <h3>STEP 2.</h3>
         <p><strong>Put your other uniform pieces in the same folder.</strong> They must be named exactly as follows. </p>
         <ul>
@@ -123,24 +125,21 @@
             <li><strong>jersey.png</strong></li>
             <li><strong>num07.png</strong></li>
             <li><strong>num89.png</strong></li>
+            <li><strong>glove-uni-1.png</strong></li>
+            <li><strong>glove-uni-2.png</strong></li>
             <li>pridesticker.png * </li>
             <li>num07helmet.png †</li>
             <li>num89helmet.png †</li>
-            <li>num07ss.png†</li>
+            <li>num07ss.png †</li>
             <li>num89ss.png †</li>
-            <li>glove.png ^</li>
-            <li>glove-second.png ^^</li>
+
         </ul>
 
         <p class="optional">* optional, these can be transparented by the tool</p>
 
         <p class="optional">† optional, and if no source texture is provided, the tool will use the main jersey numbers for 
-          the helmet and/or sleeve/shoulders (this is usually what you want)</p>
+          the helmet and/or sleeve/shoulders (this is usually what you want for sleeve/shoulder numbers, but often helmet numbers need to be a different color)</p>
 
-        <p class="optional">^ optional, will be skipped if not provided</p>
-
-        <p class="optional">^^ required only when the "Opposite Home/Away Glove" option is enabled. Use the same glove as glove.png,
-          just duplicate the file and rename it to glove-second.png. More instructions below.</p>
         
         <h3>FILE PREP DONE!</h3>
         <p>Your textures are now ready for renaming!</p>
@@ -150,22 +149,28 @@
         <hr>
         
         <h2 id="mode1">INSTRUCTIONS (For Mode 1: CSV Renaming):</h2>
-        <h3>STEP 1:</h3>
-        <p>Put one CSV file in the csv-override folder. Make sure it is in the same format as csv-override-example.csv.</p>
+        
+        <h3>STEP 0:</h3>
+        <p><a href="#prep">Prepare your textures</a>.
+        <h3>STEP 1a:</h3>
+        <p>Put one CSV file in the <strong>csv-override</strong> folder. Make sure it is in the same format as csv-override-example.csv.</p>
+        <h3>NEW! (Optional) STEP 1b:</h3>
+        <p>You can rename an existing hash-named uniform directly to the names in step 1a's CSV by placing any uniform folder in the <strong>csv-source</strong> folder. The uniform folder MUST contain a CSV.</p>
         <h3>STEP 2:</h3>
         <p>Define your configuration settings based on the uniform slot and uniform design you are making. Hover over the labels for instructions. NOTE: The Team Name, Slot, and Uniform Type options are disabled because those are provided from the CSV.</p>
         <h3>STEP 3:</h3>
         <p>Click the "Rename Source Textures" button to begin the process and wait for it to finish. Ensure there are no red errors in the output window.</p>
         <h3>STEP 4.</h3>
-        <p>That's it! Copy the subfolder from RENAMED to your emulator textures folder Eg. PCSX2/textures/SLUS-21214/replacements folder to test the uniform.</p>
+        <p>That's it! Copy the subfolder from RENAMED to your emulator textures folder Eg. PCSX2/textures/SLUS-21214/replacements folder to test the uniform. If you are replacing a mod-default uniform in your installation, be sure to put your textures in the 'user-customs' folder and disable (don't delete) the mod-default uniform textures. More info <a target="_blank" href="https://docs.google.com/document/d/1pfmA_HZraTSmoQLIsKu4HIQFO8yZ0m1s/edit#heading=h.eilhgfay6phn">here</a>.</p>
         <h3>STEP 5.</h3>
-        <p>Test the textures in-game using the <a href="https://docs.google.com/document/d/1hPX-5ygg2k2SDtAkkI9PVbS0lbL-QCBs/edit#heading=h.inb40xudxrzt" target="_blank">TESTING ISO</a> to ensure everything is named properly and working as intended.</p>
-        <h3><strong>DONE!</strong></h3>
+        <p>Done! Test the textures in-game to ensure everything is named properly and working as intended.</p>
         <br>
         <hr>
 
         <h2 id="mode2">INSTRUCTIONS (For Mode 2: Dumps Image Matching):</h2>
-        <p>⚠️ Before you start: It's EXTREMELY important that you dumped your textures in a very specific way. Use the <a href="https://docs.google.com/document/d/1hPX-5ygg2k2SDtAkkI9PVbS0lbL-QCBs/edit#heading=h.inb40xudxrzt" target="_blank">DUMPING ISO</a>, and follow <a href="https://docs.google.com/document/d/1RI2ceiXVRgVu8H-POCee2n3O08iQxa_Q/" target="_blank">these instructions</a> closely and always remember to DELETE YOUR DUMPS between games! </p>
+        <p>⚠️ Before you start: It's EXTREMELY important that you dumped your textures in a very specific way. Use the <a href="https://docs.google.com/document/d/1hPX-5ygg2k2SDtAkkI9PVbS0lbL-QCBs/edit#heading=h.inb40xudxrzt" target="_blank">DUMPING ISO</a>, and follow <a href="https://docs.google.com/document/d/1RI2ceiXVRgVu8H-POCee2n3O08iQxa_Q/" target="_blank">these instructions</a> closely and always remember to click the DELETE DUMPS button between games as the new game is loading! </p>
+        <h3>STEP 0:</h3>
+        <p><a href="#prep">Prepare your textures</a>.
         <h3>STEP 1.</h3>
         <p>Provide the path to your "Dumps Folder Path". Click "Save Configuration".</p>
         <h3>STEP 2.</h3>
@@ -173,9 +178,9 @@
         <h3>STEP 3.</h3>
         <p>Click the "Find Dumped Textures" button to begin the process and wait for it to finish. Ensure there are no red errors in the output window.</p>
         <h3>STEP 4.</h3>
-        <p>ALMOST done! Now, dump the second glove texture...</p>
+        <p>ALMOST done! Now, dump the second/opposite glove textures...</p>
         <h3><strong>NEW: GLOVES!</strong></h3>
-        <p>This tool now supports the new gloves mod. In this mod, each uniform uses two glove textures – one texture for when the uniform is used while the home team and another textures for when used as the away team. Therefore, you must dump from a second game to get the second glove texture name/replacement. Instructions:</p>
+        <p>This tool now supports the new gloves mod. In this mod, each uniform has two custom gloves, and each of those two gloves uses two glove textures – one texture for when the uniform is used while the home team and another textures for when used as the away team. Therefore, you must dump from a second game to get the second glove textures names/replacements. Instructions:</p>
           <ol>
             <li>Important: Leave the initial run's uniform folder in RENAMED (the one you just made with the steps above). </li>
             <li>
@@ -186,7 +191,7 @@
             <li>Click the "Opposite Home/Away Glove" setting checkbox, and run the tool again by clicking the "Rename Source Textures" button. It will add another glove subfolder to your uniform's folder and append the CSV file with the second glove name.</li>
           </ol> 
         <h3>STEP 5.</h3>
-        <p>That's it! Copy the newly created uniform's subfolder in RENAMED to your emulator textures folder Eg. PCSX2/texture/SLUS-21214/replacements folder to test the uniform.</p>
+        <p>That's it! Copy the newly created uniform's subfolder in RENAMED to your emulator textures folder Eg. PCSX2/texture/SLUS-21214/replacements folder to test the uniform.  If you are replacing a mod-default uniform in your installation, be sure to put your textures in the 'user-customs' folder and disable (don't delete) the mod-default uniform textures. More info <a target="_blank" href="https://docs.google.com/document/d/1pfmA_HZraTSmoQLIsKu4HIQFO8yZ0m1s/edit#heading=h.eilhgfay6phn">here</a></p>
         <h3>STEP 6.</h3>
         <p>Test the textures in-game to ensure everything is named properly and working as intended.</p>
         <h3><strong>DONE!</strong></h3>
@@ -196,27 +201,31 @@
         <h2 id="workflow">🧠 Workflow Tip:</h2>
         <p>When making uniforms for multiple slots, I have found it easier and faster for my workflow to first create all of the CSV files (using the Mode 2: Dumps method with the "Don't rename" option enabled). Then – after organizing my textures into source folders for each uniform slot per <a href="https://docs.google.com/spreadsheets/d/1cSh3Ibs306hGbgKI4rWpc2b8IlhgyKvP/edit?gid=2140522516#gid=2140522516" target="_blank">my planner</a> – I will do the renaming of my custom textures with the CSVs and Mode 1: CSV Renaming.  </p>
         
-        <p>I like this workflow because it allows me to get into more of a flow with the dumping process using the DUMPING ISO and not even worrying about testing and refining textures. When I've created all of the CSVs, I'll then switch to the TESTING ISO where I do the renaming and testing of my textures, which usually always involves making fixes and adjustments to textures. </p>
+        <p>I like this workflow because it allows me to get into more of a flow with the dumping process using the DUMPING ISO and not even worrying about testing and refining textures. When I've created all of the CSVs, I'll then switch to my main ISO (my custom NEXT ISO with the uniforms activated by DB-Editor) where I do the renaming and testing of my textures, which usually always involves making fixes and adjustments to textures. </p>
 
         <p>My rough workflow:</p>
 
         <ol>
           <li>Open the <strong>DUMPING ISO</strong> (be sure to <strong>reset rosters</strong>, use no memory card, or have a specific memory card for dumping. The roster is important.) </li>
           <li>Choose "Play Now"</li>
-          <li>Select team (same team for home and away)</li>
+          <li>Select team (always use the same team for home and away)</li>
           <li>Edit stadium and <strong>change weather to cold</strong>.</li>
           <li>At the uniform select screen, <strong>SAVE A STATE</strong></li>
-          <li>Select my uniforms and advance to the game. <strong>IMPORTANT!: DELETE DUMPS (or the entire SLUS folder) when the game is loading!</strong></li>
+          <li>Select the uniforms and advance to the game. <strong>IMPORTANT!: Click the DELETE DUMPS button when the game is loading!</strong></li>
           <li>Press F9 twice to initiate dumping.</li>
-          <li>Let the pregame intros run, do not skip it.</li>
+          <li>Let the pregame intros run, do not skip it until Corso starts to make his headgear pick.</li>
           <li>While that's happening, in the Texture Renaming Utility, configure my uniform team, slot, and settings as needed.</li>
-          <li>When the players run out for the coin toss, the dumps folder is ready. <strong>Enable the "Don't rename" checkbox</strong> (unless you are renaming your custom textures now) and <strong>Click "Find Dumped Textures"</strong>. If you get a green "SUCCESS" message in the output window, you're good and can skip the next step and proceed to step 12.</li>
+          <li>When the players run out for the <strong>coin toss</strong>, the dumps folder is ready. <strong>Enable the "Don't rename" checkbox</strong> (unless you are renaming your custom textures now) and <strong>Click "Find Dumped Textures"</strong>. If you get a green "SUCCESS" message in the output window, you're good and can skip the next step and proceed to step 12.</li>
           <li>If you get a red error message saying you're missing one or a few textures (Eg. only "29 of 30 required textures found"), don't worry, this is pretty common. Switch back to the emulator and run the kickoff and run a play from scrimmage. <strong>Click "Find Dumped Textures"</strong>. You should now get a green SUCCESS message. If not, scroll up and try to troubleshoot the issue and/or post in the <a href="https://discord.com/channels/938236373113122826/1199737229220778016" target="_blank">Discord #texture-renaming-utility channel</a>. </li>
           <li>If SUCCESS, the first uniform is done! <strong>Change the slot to the opponent's uniform</strong>. </li>
           <li><strong>Click "Find Dumped Textures"</strong></li>
-          <li>If SUCCESS, both uniforms for this game are done. <strong>LOAD THE STATE</strong> you saved in step 5. </li>
-          <li>Select the next two uniforms, proceed to game. <strong>DELETE DUMPS</strong> (or the entire SLUS folder) when the game is loading</li>
-          <li>Repeat steps 7 through 14 until you've completed all uniform slots.</li>
+          <li>If SUCCESS, both uniforms <em>for this game</em> are done. But the uniform is technically not done! We need to dump the "opposite" gloves from a second game. <strong>LOAD THE STATE</strong> you saved in step 5. </li>
+          <li>To finish the uniform, we need to dump the glove's opposite textures. Select the <strong>same two uniforms, but this time swap which team is using them</strong>. For example, make the host team wear the Away uniform and the visiting team wear the Home uniform.</li> 
+          <li>Proceed to the game and click the <strong>DELETE DUMPS</strong> button when the game is loading. TIP: Don't user control a team, and you can skip straight to kickoff, bypassing the cointoss (not needed for this step).</li>
+          <li>While the game is starting, in the Texture Renaming Utility, <strong>change your slot</strong> if needed, and <strong>enable the "Opposite Gloves" checkbox</strong>.</li>
+          <li>At the kickoff or later, <strong>click the "Find Dumped Textures" button.</strong></li>
+          <li>If you get a green SUCCESS message, the uniform is officially done! Change your slot to the other uniform used in this game, and click the "Find Dumped Textures" button again. You should get another green success message.
+          <li>Now the two uniforms are done. LOAD THE STATE you saved in step 5. Repeat steps 6 through 19 until you've completed all uniform slots.</li>
         </ol>
 
         <p>Now you will have CSVs for all of your uniforms. Save these somewhere, and at any time you like you can very quickly use Mode 1: CSV Renaming to rename your custom uniform textures without having to do any dumping. </p>

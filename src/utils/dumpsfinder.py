@@ -18,7 +18,7 @@ class DumpsFinder:
         self.required_textures_counter = 0
         self.optional_textures_counter = 0
 
-    def run_dumpsfinder(self, callback, dumps_path, uniform_slot_name, uniform_type, second_glove, photoshop_pref, pridesticker_pref, helmetnumbers_pref, ssnumbers_pref, only_make_csv):
+    def run_dumpsfinder(self, callback, dumps_path, uniform_slot_name, uniform_type, team_glove, second_glove, photoshop_pref, pridesticker_pref, helmetnumbers_pref, ssnumbers_pref, only_make_csv):
         
 
         # Function to get a formatted checkmark or fallback
@@ -59,6 +59,7 @@ class DumpsFinder:
         # callback(f"Using dumps path: {dumps_path}\n")
         # callback(f"Uniform Slot Name: {uniform_slot_name}\n")
         # callback(f"Uniform Type: {uniform_type}\n")
+        # callback(f"Team Glove: {team_glove}\n")
         # callback(f"Second Glove: {second_glove}\n")
         # callback(f"Photoshop Preference: {photoshop_pref}\n")
         # callback(f"Pride Sticker Preference: {pridesticker_pref}\n")
@@ -150,14 +151,17 @@ class DumpsFinder:
             callback(f"{Fore.YELLOW}[!] The GLOVE TYPE is not defined. \n{Style.RESET_ALL}\n")
         # Add a condition to check the uniform type and set the appropriate path
         if second_glove.lower() == 'no':
-            second_glove_output = "NORMAL (not the second glove)"
-            reference_glove = "glove"
+            second_glove_output = "NORMAL (not the second gloves)"
+            reference_glove1 = "glove-uni-1"
+            reference_glove2 = "glove-uni-2"
         elif second_glove.lower() == 'yes':
-            second_glove_output = "SECOND GLOVE (dark uniform as vistor OR light uniform as home team)"
-            reference_glove = "glove-second"
+            second_glove_output = "SECOND GLOVES (dark uniform as vistor OR light uniform as home team)"
+            reference_glove1 = "glove-uni-1-second"
+            reference_glove2 = "glove-uni-2-second"
         else:
-            second_glove_output = "Invalid input. Assuming normal glove."
-            reference_glove = "glove"
+            second_glove_output = "Invalid input. Assuming normal gloves."
+            reference_glove1 = "glove-uni-1"
+            reference_glove2 = "glove-uni-2"
         # Output the value of second_glove
         callback(f"\n[•] ", "blue")  
         callback(f"GLOVE TYPE is: =================================================#\n")
@@ -165,9 +169,9 @@ class DumpsFinder:
         callback(f"{second_glove_output}\n", "green")
         callback(f"\n#ˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉ#\n")
         # Output the selected default textures folder
-        callback(f" └→ The dumps finder will look for a dumped match with {reference_glove}.png in the '{reference_folder}' folder. It will rename your glove of the same name.\n")
+        callback(f" └→ The dumps finder will look for a dumped match with {reference_glove1}.png and {reference_glove2}.png in the '{reference_folder}' folder. It will rename your glove of the same name.\n")
         if second_glove.lower() == 'yes':
-          callback(f" └→ THIS IS THE ONLY TEXTURE THAT WILL BE PROCESSED. Change this setting to 'yes' to do the rest of the uniform.\n")
+          callback(f" └→ THESE TWO ARE THE ONLY TEXTURES THAT WILL BE PROCESSED. Change this setting to 'yes' to do the rest of the uniform.\n")
         callback("\n")  # Add a line break 
 
 
@@ -175,6 +179,8 @@ class DumpsFinder:
         # Simplify the glove boolean
         glove_normal_or_csv = second_glove.lower() != 'yes'
 
+        # Simplify the team glove boolean
+        include_team_glove = team_glove.lower() == 'yes'
 
         # General Config Settings for both methods
         if glove_normal_or_csv:
@@ -423,6 +429,9 @@ class DumpsFinder:
         # Open a CSV file for writing
         csv_filename = f"textures-{uniform_slot_name}.csv"
 
+        # Team glove csv filename
+        teamgloves_csv_filename = f"textures-{teamname}-team.csv"
+
         # Extract the second segment of uniform_slot_name for the subfolder
         if '-' in uniform_slot_name:
             renamed_subfolder = uniform_slot_name.split('-')[1]
@@ -434,16 +443,23 @@ class DumpsFinder:
             
         if only_make_csv != "yes":
             csv_destination_folder = os.path.join(renamed_folder, teamname, renamed_subfolder, "csv-texture-names")
+            teamgloves_destination_folder = os.path.join(renamed_folder, teamname, "_TEAM-ALL-UNIS")
         elif only_make_csv == "yes":
             csv_destination_folder = os.path.join(base_dir, "RENAMED")
+            teamgloves_destination_folder = os.path.join(base_dir, "RENAMED")
 
         # Ensure the destination folder exists
         if glove_normal_or_csv:
             if not os.path.exists(csv_destination_folder):
-                os.makedirs(csv_destination_folder)
+              os.makedirs(csv_destination_folder)
+            if include_team_glove:
+              if not os.path.exists(teamgloves_destination_folder):
+                  os.makedirs(teamgloves_destination_folder)
 
         # Define the full path to the CSV file in the destination folder
         csv_file_path = os.path.join(csv_destination_folder, csv_filename)
+        teamgloves_csv_file_path = os.path.join(teamgloves_destination_folder, teamgloves_csv_filename)
+
 
         # Determine the file mode based on the value of glove_normal_or_csv
         if glove_normal_or_csv:
@@ -466,14 +482,24 @@ class DumpsFinder:
                 # Pause for a thousand minutes
                 time.sleep(1000 * 60)
 
-        # Open the CSV file with the determined mode
-        with open(csv_file_path, mode=file_mode, newline='') as csvfile:
-            fieldnames = ['TEAM NAME', 'SLOT', 'TYPE', 'TEXTURE', 'FILENAME']
-            csv_writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
 
-            # Write the header only if the file is opened in write mode ('w')
+
+
+        # Open the UNIFORM textures CSV file with the determined mode
+        # Open the uniform CSV (always open)
+        with open(csv_file_path, mode=file_mode, newline='') as csvfile:
+            csv_writer = csv.DictWriter(csvfile, fieldnames=['TEAM NAME', 'SLOT', 'TYPE', 'TEXTURE', 'FILENAME'])
             if file_mode == 'w':
                 csv_writer.writeheader()
+
+            # Conditionally open team gloves CSV, or set writer to None
+            csvfileteam = None
+            csv_writer_team = None
+            if include_team_glove:
+                csvfileteam = open(teamgloves_csv_file_path, mode=file_mode, newline='')
+                csv_writer_team = csv.DictWriter(csvfileteam, fieldnames=['TEAM NAME', 'SLOT', 'TYPE', 'TEXTURE', 'FILENAME'])
+                if file_mode == 'w':
+                    csv_writer_team.writeheader()
 
             # Function to calculate hash_tolerance_for_pass
             def calculate_hash_tolerance(reference_hash_phash, compared_hash_phash, reference_hash_dhash, compared_hash_dhash):
@@ -597,7 +623,9 @@ class DumpsFinder:
             # Dictionary of files and their corresponding source images in the reference_folder folder
             # you can override the default file match parameters to tighten or loosen the search
             reference_files = {
-                "glove-second.png": {"source": "glove-second.png", "hash_tolerance": config_content.get('hash_tolerance_glove'), "ssim_threshold": config_content.get('ssim_threshold_glove')},
+                # "glove-second.png": {"source": "glove-second.png", "hash_tolerance": config_content.get('hash_tolerance_glove'), "ssim_threshold": config_content.get('ssim_threshold_glove')},
+                "glove-uni-1-second.png": {"source": "glove-uni-1-second.png", "hash_tolerance": config_content.get('hash_tolerance_glove'), "ssim_threshold": config_content.get('ssim_threshold_glove')},
+                "glove-uni-2-second.png": {"source": "glove-uni-2-second.png", "hash_tolerance": config_content.get('hash_tolerance_glove'), "ssim_threshold": config_content.get('ssim_threshold_glove')},
                 "06-TC_Face_Protector.png": {"source": "06-TC_Face_Protector.png", "hash_tolerance": config_content.get('hash_tolerance_06_TC_Face_Protector'), "ssim_threshold": config_content.get('ssim_threshold_06_TC_Face_Protector')},
                 "25-TC_Face_Protector_Top.png": {"source": "25-TC_Face_Protector_Top.png", "hash_tolerance": config_content.get('hash_tolerance_25_TC_Face_Protector_Top'), "ssim_threshold": config_content.get('ssim_threshold_25_TC_Face_Protector_Top')},
                 "14-Bk_TC_Pad.png": {"source": "14-Bk_TC_Pad.png", "hash_tolerance": config_content.get('hash_tolerance_14_Bk_TC_Pad'), "ssim_threshold": config_content.get('ssim_threshold_14_Bk_TC_Pad')},
@@ -632,7 +660,10 @@ class DumpsFinder:
                 "num89helmet.png": {"source": "num89helmet.png", "hash_tolerance": config_content.get('hash_tolerance_num89helmet'), "ssim_threshold": config_content.get('ssim_threshold_num89helmet')},
                 "num07ss.png": {"source": "num07ss.png", "hash_tolerance": config_content.get('hash_tolerance_num07ss'), "ssim_threshold": config_content.get('ssim_threshold_num07ss')},
                 "num89ss.png": {"source": "num89ss.png", "hash_tolerance": config_content.get('hash_tolerance_num89ss'), "ssim_threshold": config_content.get('ssim_threshold_num89ss')},
-                "glove.png": {"source": "glove.png", "hash_tolerance": config_content.get('hash_tolerance_glove'), "ssim_threshold": config_content.get('ssim_threshold_glove')}
+                "glove-uni-1.png": {"source": "glove-uni-1.png", "hash_tolerance": config_content.get('hash_tolerance_glove'), "ssim_threshold": config_content.get('ssim_threshold_glove')},
+                "glove-uni-2.png": {"source": "glove-uni-2.png", "hash_tolerance": config_content.get('hash_tolerance_glove'), "ssim_threshold": config_content.get('ssim_threshold_glove')},
+                "glove-team-1.png": {"source": "glove-team-1.png", "hash_tolerance": config_content.get('hash_tolerance_glove'), "ssim_threshold": config_content.get('ssim_threshold_glove')},
+                "glove-team-2.png": {"source": "glove-team-2.png", "hash_tolerance": config_content.get('hash_tolerance_glove'), "ssim_threshold": config_content.get('ssim_threshold_glove')}
             }
 
 
@@ -667,8 +698,119 @@ class DumpsFinder:
             self.required_textures_counter = 0
             self.optional_textures_counter = 0
 
+            # Check for gloves and use fallbacks if needed
+            def get_glove_path(source_folder, source_image, mode="team1"):
+                """
+                Determine the correct glove source file path with fallback order.
+
+                Modes:
+                  - "team": for team gloves (team 1, team 2)
+                  - "uniform": for regular uniform gloves
+                  - "second_uni_1": for SECOND uniform 1 gloves
+                  - "second_uni_2": for SECOND uniform 2 gloves
+                """
+
+                # 1️⃣ Try source_image first (if defined)
+                if source_image:
+                    path = os.path.join(source_folder, source_image)
+                    if os.path.exists(path):
+                        return path
+
+                # 2️⃣ Define fallback orders by mode
+                if mode == "team_1": # glove-team-1.png
+                    fallbacks = [
+                        "gloveteam1.png",
+                        "glove-team.png",
+                        "gloveteam.png",
+                        "glove.png"
+                    ]
+                if mode == "team_2": # glove-team-2.png
+                    fallbacks = [
+                        "gloveteam2.png",
+                        "glove-team.png",
+                        "gloveteam.png",
+                        "glove.png"
+                    ]
+
+                elif mode == "uniform_1": # glove-uni-1.png
+                    fallbacks = [
+                        "gloveuni1.png",
+                        "glove-uni.png",
+                        "gloveuni.png",
+                        "glove-uni-2.png",
+                        "gloveuni2.png",
+                        "glove-team-1.png",
+                        "gloveteam1.png",
+                        "glove-team.png",
+                        "gloveteam.png",
+                        "glove.png"
+                    ]
+                elif mode == "uniform_2": # glove-uni-2.png
+                    fallbacks = [
+                        "gloveuni2.png",
+                        "glove-uni.png",
+                        "gloveuni.png",
+                        "glove-uni-1.png",
+                        "gloveuni1.png",
+                        "glove-team-2.png",
+                        "gloveteam2.png",
+                        "glove-team-1.png",
+                        "gloveteam1.png",
+                        "glove-team.png",
+                        "gloveteam.png",
+                        "glove.png"
+                    ]
+
+                elif mode == "second_uni_1": # glove-uni-1.png (away)
+                    fallbacks = [
+                        "glove-uni-1.png",
+                        "gloveuni1.png",
+                        "glove-uni.png",
+                        "gloveuni.png",
+                        "glove-uni-2.png",
+                        "gloveuni2.png",
+                        "glove-team-1.png",
+                        "gloveteam1.png",
+                        "glove-team-2.png",
+                        "gloveteam2.png",
+                        "glove-team.png",
+                        "gloveteam.png",
+                        "glove.png"
+                    ]
+
+                elif mode == "second_uni_2": # glove-uni-2.png (away)
+                    fallbacks = [
+                        "glove-uni-2.png",
+                        "gloveuni2.png",
+                        "glove-uni.png",
+                        "gloveuni.png",
+                        "glove-uni-1.png",
+                        "gloveuni1.png",
+                        "glove-team-2.png",
+                        "gloveteam2.png",
+                        "glove-team-1.png",
+                        "gloveteam1.png",
+                        "glove-team.png",
+                        "gloveteam.png",
+                        "glove.png"
+                    ]
+
+                else:
+                    fallbacks = []
+
+                # 3️⃣ Try each fallback in order
+                for filename in fallbacks:
+                    path = os.path.join(source_folder, filename)
+                    if os.path.exists(path):
+                        return path
+
+                # 4️⃣ If nothing found
+                return None
+
+
             # Function to process each matching texture
-            def process_texture(file, file_data, similar_images):
+            def process_texture(file, file_data, similar_images, csv_writer=None, csv_writer_team=None):
+                # callback(f"DEBUG: Running process_texture  #\n")
                 # global required_textures_counter  # Declare the counter as a global variable
                 # global optional_textures_counter  # Declare the counter as a global variable
                 callback("\n")  # Add a line break 
@@ -699,6 +841,7 @@ class DumpsFinder:
 
                     # Redefine the 'renamed' folder
                     renamed_folder = os.path.join(base_dir, "RENAMED", renamed_subfolder0, renamed_subfolder)
+
                     
                     # Create 'renamed' folder if it doesn't exist
                     if only_make_csv != "yes":
@@ -722,8 +865,8 @@ class DumpsFinder:
                             found_filename_base = os.path.splitext(os.path.basename(image_path))[0]
                             
                             # Extract the number part of the filenames to compare
-                            base_image_number = base_image_name[3:5]
-                            found_number = found_filename_base[3:5]
+                            base_image_number = base_image_name.split("-")[0]
+                            found_number = found_filename_base.split("-")[0]
                             
                             if base_image_number == found_number:
                                 # Create subfolder if it doesn't exist
@@ -761,19 +904,97 @@ class DumpsFinder:
                                     time.sleep(1000 * 60)
 
 
+                    # Skip team gloves if option not checked
+                    elif not include_team_glove and file in ("glove-team-1.png", "glove-team-2.png"):
+                        continue
 
-                    # Glove
-                    elif file == "glove.png":
+                    # Glove - Team 1
+                    elif include_team_glove and file == "glove-team-1.png":
+                        new_file_name = f"{found_filename}.png"
+                        # Create glove subfolder if it doesn't exist
+                        glove_folder = "glove-team-1"
+                        glove_path = os.path.join(source_folder, source_image)
+                        # Check if source_image exists and use fallbacks if needed
+                        glove_path = get_glove_path(source_folder, source_image, mode="team_1")
+                        if glove_path:
+                            # Copy and rename glove-team-1.png
+                            if only_make_csv != "yes":
+                                if not os.path.exists(os.path.join(teamgloves_destination_folder, glove_folder)):
+                                    os.makedirs(os.path.join(teamgloves_destination_folder, glove_folder))
+                                shutil.copy(glove_path, os.path.join(teamgloves_destination_folder, glove_folder, new_file_name))
+                            # Write to the CSV file
+                            # callback(f"DEBUG: Attempting to write to the CSV file.\n")
+                            csv_writer_team.writerow({'TEAM NAME': teamname, 'SLOT': "ALL", 'TYPE': "TEAM", 'TEXTURE': file, 'FILENAME': new_file_name})
+                            callback(f"{checkmark} ", "green")
+                            callback(f"Texture renamed and filename added to the CSV file.\n")
+                            self.optional_textures_counter += 1
+                        else:
+                            if only_make_csv != "yes":
+                              # Print error message
+                              callback("\n")
+                              callback(f"###########################################################\n")
+                              callback(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n", "red")
+                              callback(f"!!! ERROR: ", "red")
+                              callback(f"No file named glove-team-1.png exists in YOUR_TEXTURES. Add the source file and try again.\n")
+                              callback(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n", "red")
+                              callback(f"###########################################################\n")
+                              # Pause for a thousand minutes
+                              time.sleep(1000 * 60)
+                            else:
+                              # Write to the CSV file
+                              csv_writer_team.writerow({'TEAM NAME': teamname, 'SLOT': slotname, 'TYPE': uniform_type, 'TEXTURE': file, 'FILENAME': new_file_name})
+                              callback(f"{checkmark} ", "green")
+                              callback(f"SUCCESS. Filename added to the CSV file.\n")
+                    
+                    # Glove - Team 2
+                    elif include_team_glove and file == "glove-team-2.png":
+                        new_file_name = f"{found_filename}.png"
+                        # Create glove subfolder if it doesn't exist
+                        glove_folder = "glove-team-2"
+                        # Check if source_image exists and use fallbacks if needed
+                        glove_path = get_glove_path(source_folder, source_image, mode="team_2")
+                        if glove_path:
+                            # Copy and rename glove-team-2.png
+                            if only_make_csv != "yes":
+                                if not os.path.exists(os.path.join(teamgloves_destination_folder, glove_folder)):
+                                    os.makedirs(os.path.join(teamgloves_destination_folder, glove_folder))
+                                shutil.copy(glove_path, os.path.join(teamgloves_destination_folder, glove_folder, new_file_name))
+                            # Write to the CSV file
+                            # callback(f"DEBUG: Attempting to write to the CSV file.\n")
+                            csv_writer_team.writerow({'TEAM NAME': teamname, 'SLOT': "ALL", 'TYPE': "TEAM", 'TEXTURE': file, 'FILENAME': new_file_name})
+                            callback(f"{checkmark} ", "green")
+                            callback(f"Texture renamed and filename added to the CSV file.\n")
+                            self.optional_textures_counter += 1
+                        else:
+                            if only_make_csv != "yes":
+                              # Print error message
+                              callback("\n")
+                              callback(f"###########################################################\n")
+                              callback(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n", "red")
+                              callback(f"!!! ERROR: ", "red")
+                              callback(f"No file named glove-team-2.png exists in YOUR_TEXTURES. Add the source file and try again.\n")
+                              callback(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n", "red")
+                              callback(f"###########################################################\n")
+                              # Pause for a thousand minutes
+                              time.sleep(1000 * 60)
+                            else:
+                              # Write to the CSV file
+                              csv_writer_team.writerow({'TEAM NAME': teamname, 'SLOT': slotname, 'TYPE': uniform_type, 'TEXTURE': file, 'FILENAME': new_file_name})
+                              callback(f"{checkmark} ", "green")
+                              callback(f"SUCCESS. Filename added to the CSV file.\n")
+
+                    # Glove - Uniform 1
+                    elif file == "glove-uni-1.png":
                         new_file_name = f"{found_filename}.png"
                         # Create glove subfolder if it doesn't exist
                         if uniform_type == "dark":
-                            glove_folder = "glove-home"
+                            glove_folder = "glove-uni-1-home"
                         else:
-                            glove_folder = "glove-away"
-                        glove_path = os.path.join(source_folder, source_image)
-                        # Check if source_image exists
-                        if os.path.exists(glove_path):
-                            # Copy and rename glove.png
+                            glove_folder = "glove-uni-1-away"
+                        # Check if source_image exists and use fallbacks if needed
+                        glove_path = get_glove_path(source_folder, source_image, mode="uniform_1")
+                        if glove_path:
+                            # Copy and rename glove-uni-1.png
                             if only_make_csv != "yes":
                                 if not os.path.exists(os.path.join(renamed_folder, glove_folder)):
                                     os.makedirs(os.path.join(renamed_folder, glove_folder))
@@ -782,29 +1003,120 @@ class DumpsFinder:
                             csv_writer.writerow({'TEAM NAME': teamname, 'SLOT': slotname, 'TYPE': uniform_type, 'TEXTURE': file, 'FILENAME': new_file_name})
                             callback(f"{checkmark} ", "green")
                             callback(f"Texture renamed and filename added to the CSV file.\n")
-                            self.optional_textures_counter += 1
+                            self.required_textures_counter += 1
                         else:
-                            callback("NO GLOVE SOURCE FILE FOUND. SKIPPING RENAMING.\n")
-                            # Write to the CSV file
-                            csv_writer.writerow({'TEAM NAME': teamname, 'SLOT': slotname, 'TYPE': uniform_type, 'TEXTURE': file, 'FILENAME': new_file_name})
-                            callback(f"{checkmark} ", "green")
-                            callback(f"SUCCESS. Filename added to the CSV file. No texture used.\n")
-                    
-                    # Second Glove
-                    elif glove_normal_or_csv and file == "glove-second.png":
-                        continue
-                      
-                    # Second Glove
-                    elif file == "glove-second.png":
+                            if only_make_csv != "yes":
+                              # Print error message
+                              callback("\n")
+                              callback(f"###########################################################\n")
+                              callback(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n", "red")
+                              callback(f"!!! ERROR: ", "red")
+                              callback(f"No file named glove-uni-1.png exists in YOUR_TEXTURES. Add the source file and try again.\n")
+                              callback(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n", "red")
+                              callback(f"###########################################################\n")
+                              # Pause for a thousand minutes
+                              time.sleep(1000 * 60)
+                            else:
+                              # Write to the CSV file
+                              csv_writer.writerow({'TEAM NAME': teamname, 'SLOT': slotname, 'TYPE': uniform_type, 'TEXTURE': file, 'FILENAME': new_file_name})
+                              callback(f"{checkmark} ", "green")
+                              callback(f"SUCCESS. Filename added to the CSV file.\n")
+
+                    # Glove - Uniform 2
+                    elif file == "glove-uni-2.png":
                         new_file_name = f"{found_filename}.png"
                         # Create glove subfolder if it doesn't exist
                         if uniform_type == "dark":
-                            glove_folder = "glove-away"
+                            glove_folder = "glove-uni-2-home"
                         else:
-                            glove_folder = "glove-home"
-                        glove_path = os.path.join(source_folder, source_image)
-                        # Check if source_image exists
-                        if os.path.exists(glove_path):
+                            glove_folder = "glove-uni-2-away"
+                        # Check if source_image exists and use fallbacks if needed
+                        glove_path = get_glove_path(source_folder, source_image, mode="uniform_2")
+                        if glove_path:
+                            # Copy and rename glove-uni-2.png
+                            if only_make_csv != "yes":
+                                if not os.path.exists(os.path.join(renamed_folder, glove_folder)):
+                                    os.makedirs(os.path.join(renamed_folder, glove_folder))
+                                shutil.copy(glove_path, os.path.join(renamed_folder, glove_folder, new_file_name))
+                            # Write to the CSV file
+                            csv_writer.writerow({'TEAM NAME': teamname, 'SLOT': slotname, 'TYPE': uniform_type, 'TEXTURE': file, 'FILENAME': new_file_name})
+                            callback(f"{checkmark} ", "green")
+                            callback(f"Texture renamed and filename added to the CSV file.\n")
+                            self.required_textures_counter += 1
+                        else:
+                            if only_make_csv != "yes":
+                              # Print error message
+                              callback("\n")
+                              callback(f"###########################################################\n")
+                              callback(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n", "red")
+                              callback(f"!!! ERROR: ", "red")
+                              callback(f"No file named glove-uni-2.png exists in YOUR_TEXTURES. Add the source file and try again.\n")
+                              callback(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n", "red")
+                              callback(f"###########################################################\n")
+                              # Pause for a thousand minutes
+                              time.sleep(1000 * 60)
+                            else:
+                              # Write to the CSV file
+                              csv_writer.writerow({'TEAM NAME': teamname, 'SLOT': slotname, 'TYPE': uniform_type, 'TEXTURE': file, 'FILENAME': new_file_name})
+                              callback(f"{checkmark} ", "green")
+                              callback(f"SUCCESS. Filename added to the CSV file.\n")
+                    
+                    # Second Glove
+                    elif glove_normal_or_csv and file in ("glove-uni-1-second.png", "glove-uni-2-second.png"):
+                        continue
+                      
+                    # Second Glove - Uniform 1
+                    elif file == "glove-uni-1-second.png":
+                        new_file_name = f"{found_filename}.png"
+                        # Create glove subfolder if it doesn't exist
+                        if uniform_type == "dark":
+                            glove_folder = "glove-uni-1-away"
+                        else:
+                            glove_folder = "glove-uni-1-home"
+                        # Check if source_image exists and use fallbacks if needed
+                        glove_path = get_glove_path(source_folder, source_image, mode="second_uni_1")
+                        if glove_path:
+                            if only_make_csv != "yes":
+                            # Copy and rename glove-uni-1.png
+                                if not os.path.exists(os.path.join(renamed_folder, glove_folder)):
+                                    os.makedirs(os.path.join(renamed_folder, glove_folder))
+                                shutil.copy(glove_path, os.path.join(renamed_folder, glove_folder, new_file_name))
+                            # Write to the CSV file
+                            csv_writer.writerow({'TEAM NAME': teamname, 'SLOT': slotname, 'TYPE': uniform_type, 'TEXTURE': file, 'FILENAME': new_file_name})
+                            callback(f"{checkmark} ", "green")
+                            callback(f"SUCCESS. Texture renamed and filename added to the CSV file.\n")
+                            self.required_textures_counter += 1
+                        else:
+                            if only_make_csv != "yes":
+                              # Print error message
+                              callback("\n")
+                              callback(f"###########################################################\n")
+                              callback(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n", "red")
+                              callback(f"!!! ERROR: ", "red")
+                              callback(f"No file named glove-uni-1.png exists in YOUR_TEXTURES. Add the source file and try again.\n")
+                              callback(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n", "red")
+                              callback(f"###########################################################\n")
+                              # Pause for a thousand minutes
+                              time.sleep(1000 * 60)
+                            else:
+                              # Write to the CSV file
+                              csv_writer.writerow({'TEAM NAME': teamname, 'SLOT': slotname, 'TYPE': uniform_type, 'TEXTURE': file, 'FILENAME': new_file_name})
+                              callback(f"{checkmark} ", "green")
+                              callback(f"SUCCESS. Filename added to the CSV file.\n")
+
+                            
+
+                    # Second Glove - Uniform 2
+                    elif file == "glove-uni-2-second.png":
+                        new_file_name = f"{found_filename}.png"
+                        # Create glove subfolder if it doesn't exist
+                        if uniform_type == "dark":
+                            glove_folder = "glove-uni-2-away"
+                        else:
+                            glove_folder = "glove-uni-2-home"
+                        # Check if source_image exists and use fallbacks if needed
+                        glove_path = get_glove_path(source_folder, source_image, mode="second_uni_2")
+                        if glove_path:
                             if only_make_csv != "yes":
                             # Copy and rename glove.png
                                 if not os.path.exists(os.path.join(renamed_folder, glove_folder)):
@@ -816,18 +1128,22 @@ class DumpsFinder:
                             callback(f"SUCCESS. Texture renamed and filename added to the CSV file.\n")
                             self.required_textures_counter += 1
                         else:
+                          if only_make_csv != "yes":
                             # Print error message
                             callback("\n")
                             callback(f"###########################################################\n")
                             callback(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n", "red")
                             callback(f"!!! ERROR: ", "red")
-                            callback(f"No file named glove-second.png exists in YOUR_TEXTURES. Add the source file and try again.\n")
-                            callback(f"!!! TIP: This glove should be the same as glove.png, so just duplicate that file and name it glove-second.png.\n")
+                            callback(f"No file named glove-uni-2.png exists in YOUR_TEXTURES. Add the source file and try again.\n")
                             callback(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n", "red")
                             callback(f"###########################################################\n")
                             # Pause for a thousand minutes
                             time.sleep(1000 * 60)
-
+                          else:
+                            # Write to the CSV file
+                            csv_writer.writerow({'TEAM NAME': teamname, 'SLOT': slotname, 'TYPE': uniform_type, 'TEXTURE': file, 'FILENAME': new_file_name})
+                            callback(f"{checkmark} ", "green")
+                            callback(f"SUCCESS. Filename added to the CSV file.\n")
                     
                     # If answered yes to transparent pride sticker, copy the transparent image instead of a source image
                     elif file == "pridesticker.png":
@@ -911,14 +1227,21 @@ class DumpsFinder:
                       #check if there is a specific texture provided for the helmet numbers
                       if os.path.exists(numbers_file):
                           new_file_name = f"{found_filename}.png"
+                          # Put them in subfolders
+                          num_folder_helmet = "nums-helmet"
+                          num_folder_ss = "nums-shoulder"
                           if helmetnumbers_pref and numbers_type == "helmet":
                               if only_make_csv != "yes":
-                                  shutil.copy(numbers_file, os.path.join(renamed_folder, new_file_name))
+                                  if not os.path.exists(os.path.join(renamed_folder, num_folder_helmet)):
+                                      os.makedirs(os.path.join(renamed_folder, num_folder_helmet))
+                                  shutil.copy(numbers_file, os.path.join(renamed_folder, num_folder_helmet, new_file_name))
                               success_msg = "Texture renamed and filename added to the CSV file."
                               self.optional_textures_counter += 1
                           elif ssnumbers_pref and numbers_type == "ss":
                               if only_make_csv != "yes":
-                                  shutil.copy(numbers_file, os.path.join(renamed_folder, new_file_name))
+                                  if not os.path.exists(os.path.join(renamed_folder, num_folder_ss)):
+                                      os.makedirs(os.path.join(renamed_folder, num_folder_ss))
+                                  shutil.copy(numbers_file, os.path.join(renamed_folder, num_folder_ss, new_file_name))
                               success_msg = "Texture renamed and filename added to the CSV file."
                               self.optional_textures_counter += 1
                           else:
@@ -931,11 +1254,16 @@ class DumpsFinder:
                       # If no helmet or sleeve/shoulder numbers are provided, use the main jersey numbers
                       else:
                           new_file_name = f"{found_filename}.png"
+                          # Put them in subfolders
+                          num_folder_helmet = "nums-helmet"
+                          num_folder_ss = "nums-shoulder"
                           is_success = False
                           if helmetnumbers_pref and numbers_type == "helmet":
                               try:
                                   if only_make_csv != "yes":
-                                      shutil.copy(os.path.join(source_folder, numbers_main), os.path.join(renamed_folder, new_file_name))
+                                      if not os.path.exists(os.path.join(renamed_folder, num_folder_helmet)):
+                                          os.makedirs(os.path.join(renamed_folder, num_folder_helmet))
+                                      shutil.copy(os.path.join(source_folder, numbers_main), os.path.join(renamed_folder, num_folder_helmet, new_file_name))
                                   success_msg = "Texture (used main numbers) renamed and filename added to the CSV file."
                                   self.optional_textures_counter += 1
                                   is_success = True
@@ -946,7 +1274,9 @@ class DumpsFinder:
                           elif ssnumbers_pref and numbers_type == "ss":
                               try:
                                   if only_make_csv != "yes":
-                                      shutil.copy(os.path.join(source_folder, numbers_main), os.path.join(renamed_folder, new_file_name))
+                                      if not os.path.exists(os.path.join(renamed_folder, num_folder_ss)):
+                                          os.makedirs(os.path.join(renamed_folder, num_folder_ss))
+                                      shutil.copy(os.path.join(source_folder, numbers_main), os.path.join(renamed_folder, num_folder_ss, new_file_name))
                                   success_msg = "Texture (used main numbers) renamed and filename added to the CSV file."
                                   self.optional_textures_counter += 1
                                   is_success = True
@@ -966,7 +1296,7 @@ class DumpsFinder:
 
                     
                     # Everything else
-                    elif file not in ["num07shadow.png", "num89shadow.png", "num07helmet.png", "num07ss.png", "num89helmet.png", "num89ss.png", "pridesticker.png", "glove.png", "glove-second.png"]:
+                    elif file not in ["num07shadow.png", "num89shadow.png", "num07helmet.png", "num07ss.png", "num89helmet.png", "num89ss.png", "pridesticker.png", "glove.png", "glove-second.png", "glove-team-1.png", "glove-team-2.png", "glove-uni-1.png", "glove-uni-2.png", "glove-uni-1-second.png", "glove-uni-2-second.png"]:
                       if file in ["wrist_Half_Sleeve_Bk.png", "wrist_Half_Sleeve_Wt.png", "wrist_QB_Wrist_Bk.png", "wrist_QB_Wrist_Wt.png"]:
                           try:
                               # Copy from os.path.join(base_dir, "utils", reference_folder) for specific files
@@ -997,9 +1327,23 @@ class DumpsFinder:
                       else:
                           try:
                               new_file_name = f"{found_filename}.png"
+                              # Subfolders
+                              if file == "16-Shoe.png":
+                                  subfolder = "cleat-primary" 
+                              elif file == "17-Shoe_w_White_Tape.png":
+                                  subfolder = "cleat-alt1" 
+                              elif file == "23-Shoe_w_Black_Tape.png":
+                                  subfolder = "cleat-alt2" 
+                              elif file == "24-Shoe_w_TC_Tape.png":
+                                  subfolder = "cleat-alt3" 
+                              else:
+                                  subfolder = "" 
+                              # Check if copying files or only making CSV
                               if only_make_csv != "yes":
                                   # Copy from source_folder for other files
-                                  shutil.copy(os.path.join(source_folder, source_image), os.path.join(renamed_folder, new_file_name))
+                                  if not os.path.exists(os.path.join(renamed_folder, subfolder)):
+                                      os.makedirs(os.path.join(renamed_folder, subfolder))
+                                  shutil.copy(os.path.join(source_folder, source_image), os.path.join(renamed_folder, subfolder, new_file_name))
                               # Write to the CSV file
                               csv_writer.writerow({'TEAM NAME': teamname, 'SLOT': slotname, 'TYPE': uniform_type, 'TEXTURE': file, 'FILENAME': new_file_name})
                               callback(f"{checkmark} ", "green")
@@ -1031,14 +1375,24 @@ class DumpsFinder:
             
             def no_texture(file, file_data, similar_images):
                 callback("\n")  # Add a line break 
-                if file in ["17-Shoe_w_White_Tape.png"]:
+                if file in ["glove-team-1.png", "glove-team-2.png"]:
+                  if include_team_glove:
+                    callback(f"###########################################################\n")
+                    callback(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n", "red")
+                    callback(f"[•] ", "blue")
+                    callback(f"==== NO similar images found for {file}. Are you sure the texture dumped? If so...try raising the hash_tolerance to 2 or more and/or lowering the ssim_threshold for this item in config.txt to broaden the search. Alternatively, you can replace the reference texture with the actual dumped texture for a definite match. ====\n")
+                    callback(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n", "red")
+                    callback(f"###########################################################\n")
+                  else:
+                    callback(f"")
+                elif file in ["17-Shoe_w_White_Tape.png"]:
                   callback(f"###########################################################\n")
                   callback(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n", "red")
                   callback(f"[•] ", "blue")
                   callback(f"==== NO similar images found for {file}. Are you sure the texture dumped? If so...try raising the hash_tolerance to 2 or more and/or lowering the ssim_threshold for this item in config.txt to broaden the search. Alternatively, you can replace the reference texture with the actual dumped texture for a definite match. ====\n")
                   callback(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n", "red")
                   callback(f"###########################################################\n")
-                if file in ["13-Sock.png"]:
+                elif file in ["13-Sock.png"]:
                   callback(f"###########################################################\n")
                   callback(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n", "red")
                   callback(f"[•] ", "blue")
@@ -1065,21 +1419,20 @@ class DumpsFinder:
             #-----------------------------------------#
             # Iterate over the reference files to find matches in the dumps and perform the actions
             for file, file_data in reference_files.items():
-
-                # If second glove, only process "glove-second.png" and skip all others
+                # If second gloves, only process "glove-uni-1-second.png" and "glove-uni-2-second.png" and skip all others
                 if not glove_normal_or_csv:
-                    if file != "glove-second.png":
-                        continue  # Skip processing any file that is not "glove-second.png"
-                    # Process "glove-second.png"
+                    if file not in ("glove-uni-1-second.png", "glove-uni-2-second.png"):
+                        continue  # Skip processing any file that is not a second glove
+                    # Process second glove
                     source_image = file_data["source"]
                     params = file_data if 'hash_tolerance' in file_data and 'ssim_threshold' in file_data else None
                     original_similar_images = find_similar_images(os.path.join(base_dir, "utils", reference_folder, source_image), dumps_path, params)
                     
                     if original_similar_images:
-                        process_texture(file, file_data, original_similar_images)
+                        process_texture(file, file_data, original_similar_images, csv_writer=csv_writer, csv_writer_team=csv_writer_team)
                     else:
                         no_texture(file, file_data, original_similar_images)
-                    continue  # Continue after processing "glove-second.png"
+                    continue  # Continue after processing second glove
 
                 # Regular processing for other cases when glove_normal_or_csv is True
                 source_image = file_data["source"]
@@ -1088,12 +1441,13 @@ class DumpsFinder:
 
                 if file in ["num07shadow.png", "num89shadow.png"]:
                     if original_similar_images:
-                        process_texture(file, file_data, original_similar_images)
+                        process_texture(file, file_data, original_similar_images, csv_writer=csv_writer, csv_writer_team=csv_writer_team)
                     else:
                         no_texture(file, file_data, original_similar_images)
                 else:
                     if original_similar_images and len(original_similar_images) > 0:
-                        process_texture(file, file_data, [original_similar_images[0]])
+                        # callback(f"DEBUG: Calling process_texture 01 #\n")
+                        process_texture(file, file_data, [original_similar_images[0]], csv_writer=csv_writer, csv_writer_team=csv_writer_team)
                     else:
                         # Check alternates only when there are no similar images in the original check
                         if file in ["13-Sock.png"]:
@@ -1114,7 +1468,7 @@ class DumpsFinder:
                                     alternate_similar_images = find_similar_images(alternate_source_path, dumps_path, params, context=f"{alts_folder}")
 
                                     if alternate_similar_images:
-                                        process_texture(file, file_data, [alternate_similar_images[0]])
+                                        process_texture(file, file_data, [alternate_similar_images[0]], csv_writer=csv_writer, csv_writer_team=csv_writer_team)
                                         break  # Break out of the loop if a match is found
 
                                 else:
@@ -1133,7 +1487,7 @@ class DumpsFinder:
                                 callback(f"at: {alternate_source_path}...\n")
                           
                                 if alternate_similar_images:
-                                    process_texture(file, file_data, [alternate_similar_images[0]])
+                                    process_texture(file, file_data, [alternate_similar_images[0]], csv_writer=csv_writer, csv_writer_team=csv_writer_team)
                                 else:
                                     no_texture(file, file_data, alternate_similar_images)
                             else:
@@ -1167,6 +1521,8 @@ class DumpsFinder:
             # Move the CSV file to the 'renamed' folder
             if only_make_csv != "yes":
                 shutil.move(csv_file_path, os.path.join(renamed_folder, "csv-texture-names", csv_filename))
+                if include_team_glove:
+                  shutil.move(teamgloves_csv_file_path, os.path.join(teamgloves_destination_folder, teamgloves_csv_filename))
             elif only_make_csv == "yes":
                 shutil.move(csv_file_path, os.path.join(base_dir, "RENAMED", csv_filename))
 
@@ -1183,15 +1539,16 @@ class DumpsFinder:
         callback("\n")  # Add a line break 
         callback("#--------------------------------------------------------------#\n")
         callback("#                                                              #\n")
-        if glove_normal_or_csv and self.required_textures_counter < 30:
+        callback("#                                                              #\n")
+        if glove_normal_or_csv and self.required_textures_counter < 32:
           callback(f"#                 ")
           callback(f"#!!!! DONE WITH ERRORS !!!!", "red")
           callback(f"#                   #\n")
           callback(f"#         Number of textures found and renamed: {self.required_textures_counter + self.optional_textures_counter}             #\n")
           callback(f"#                   Required: ")
           callback(f"{self.required_textures_counter}", "red")
-          callback(f" of 30                         #\n")
-        if glove_normal_or_csv and self.required_textures_counter > 29:
+          callback(f" of 32                         #\n")
+        if glove_normal_or_csv and self.required_textures_counter > 31:
           callback(f"#                         ")
           callback(f"SUCCESS!", "green")
           callback(f"                             #\n")
@@ -1199,30 +1556,30 @@ class DumpsFinder:
           if glove_normal_or_csv:
             callback(f"#                   Required:  ")
             callback(f"{self.required_textures_counter}", "green")
-            callback(f" of 30                        #\n")
+            callback(f" of 32                        #\n")
           else:
             callback(f"#                   Required:  \n")
             callback(f"{self.required_textures_counter}", "green")
             callback(f" of 1                         #\n")
         if glove_normal_or_csv:
-          callback(f"#                    Optional: {self.optional_textures_counter} of 5                          #\n")
-        if glove_normal_or_csv and self.required_textures_counter < 30:
+          callback(f"#                    Optional: {self.optional_textures_counter} of 6                          #\n")
+        if glove_normal_or_csv and self.required_textures_counter < 32:
           callback("#                                                              #\n")
           callback(f"#                ")
           callback(f"!!!!  SOMETHING WENT WRONG. !!!", "red")
           callback(f"               #\n")
           callback(f"#     ")
-          callback(f"!!!!  {30 - self.required_textures_counter} of the required textures are missing.  !!!", "red")
+          callback(f"!!!!  {32 - self.required_textures_counter} of the required textures are missing.  !!!", "red")
           callback(f"       #\n")
-        if not glove_normal_or_csv and self.required_textures_counter == 1:
+        if not glove_normal_or_csv and self.required_textures_counter == 2:
           callback(f"#                         ")
           callback(f"SUCCESS!", "green")
           callback(f"                             #\n")
           callback(f"#         Number of textures found and renamed: {self.required_textures_counter + self.optional_textures_counter}              #\n")
           callback(f"#                   Required: ")
           callback(f"{self.required_textures_counter}", "green")
-          callback(f" of 1                           #\n")
-        if not glove_normal_or_csv and self.required_textures_counter < 1:
+          callback(f" of 2                           #\n")
+        if not glove_normal_or_csv and self.required_textures_counter < 2:
           callback("#                                                              #\n")
           callback(f"#                ")
           callback(f"!!!!  SOMETHING WENT WRONG. !!!", "red")
@@ -1238,7 +1595,12 @@ class DumpsFinder:
         callback("#    with the uniform for easy future edits of this slot.      #\n")
         callback("#                                                              #\n")
         callback("################################################################\n")
-        callback("\n")  # Add a line break 
+        if glove_normal_or_csv and self.required_textures_counter > 31:
+          callback("#                                                              #\n")
+          callback(f"# !!   THE UNIFORM IS NOT DONE! DUMP THE OPPOSITE GLOVES.   !! #\n", "yellow")
+          callback("#                                                              #\n")
+          callback("################################################################\n")
+
         callback("\n")  # Add a line break 
 
         ############################################################################
@@ -1297,9 +1659,115 @@ class DumpsFinder:
             callback("********************************************************\n")
             callback(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n", "red")
         else:
-            callback("Passed duplicate PNG files check. Ready for next round if no red errors above.\n")
+            # callback("Passed duplicate PNG files check. Ready for next round if no red errors above.\n")
+            callback("✅ Passed duplicate PNG files check.\n")
+            # callback("\n")
+            # callback("REMEMBER TO DELETE YOUR DUMPS PRIOR TO DUMPING THE NEXT GAME.")
+
+
+
+
+
+        ############################################################################
+        def find_duplicate_items_in_csvs(folder):
+            """
+            Recursively checks all CSV files in `folder` for duplicate FILENAME values.
+            Returns a dict mapping each duplicate filename to the list of CSVs where it appears.
+            """
+
+            # callback("\nStarting duplicate FILENAME check across all CSV files...\n\n")
+
+            filename_map = {}  # key = FILENAME value, value = list of CSV paths
+
+            for root, dirs, files in os.walk(folder):
+                for file in files:
+                    if not file.lower().endswith(".csv"):
+                        continue
+
+                    file_path = os.path.join(root, file)
+
+                    try:
+                        with open(file_path, "r", encoding="utf-8-sig", newline="") as f:
+                            reader = csv.reader(f)
+                            header = next(reader, None)
+
+                            if not header:
+                                continue
+
+                            # Normalize headers
+                            header = [h.strip().upper() for h in header]
+
+                            if "FILENAME" not in header:
+                                continue
+
+                            filename_index = header.index("FILENAME")
+
+                            # Extract all FILENAME values
+                            for row in reader:
+                                if len(row) <= filename_index:
+                                    continue
+                                val = row[filename_index].strip()
+                                if val:
+                                    filename_map.setdefault(val, []).append(file_path)
+
+                    except Exception as e:
+                        print(f"⚠️ Error reading {file_path}: {e}")
+                        continue
+
+            # Filter out entries that only occur once
+            duplicate_sets = {file: sorted(paths) for file, paths in filename_map.items() if len(paths) > 1}
+
+            return duplicate_sets
+
+
+
+
+
+        base_dir = os.path.dirname(os.path.abspath(sys.argv[0]))
+        folder_to_check = os.path.join(base_dir, "RENAMED")
+
+        duplicate_sets = find_duplicate_items_in_csvs(folder_to_check)
+
+        if duplicate_sets:
             callback("\n")
-            callback("REMEMBER TO DELETE YOUR DUMPS PRIOR TO DUMPING THE NEXT GAME.")
+            callback(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n", "red")
+            callback("******  ")
+            callback("WARNING: ", "red")
+            callback("Duplicate FILENAME entries found in CSV files!  *******\n")
+            callback("*                                                      *\n")
+            callback("*          SEE BELOW FOR DETAILS                       *\n")
+            callback("*                                                      *\n")
+            callback("*     You may have dumped the same uniform twice.      *\n")
+            callback("*    Correct it and redump. No two files can have      *\n")
+            callback("*        the same name anywhere in replacements.       *\n")
+            callback("*                                                      *\n")
+            callback("********************************************************\n")
+
+            for idx, (filename, paths) in enumerate(duplicate_sets.items(), start=1):
+                callback(f"\nDuplicate Set {idx}:\n")
+                for path in paths:
+                    callback(path)
+                    callback("\n")
+
+            callback("\n")
+            callback("******  ")
+            callback("WARNING: ", "red")
+            callback("Duplicate FILENAME entries found in CSV files!  *******\n")
+            callback("*                                                      *\n")
+            callback("*              SEE ABOVE FOR DETAILS                   *\n")
+            callback("*                                                      *\n")
+            callback("*     You may have dumped the same uniform twice.      *\n")
+            callback("*    Correct it and redump. No two files can have      *\n")
+            callback("*        the same name anywhere in replacements.       *\n")
+            callback("*                                                      *\n")
+            callback("********************************************************\n")
+            callback(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n", "red")
+
+        else:
+            callback("✅ Passed CSV FILENAME duplicate check.\n")
+            callback("Ready for next round if no red errors above.\n")
+            callback("\n")
+            callback("REMEMBER TO DELETE YOUR DUMPS PRIOR TO DUMPING THE NEXT GAME.\n")
 
 
 

@@ -48,8 +48,11 @@ class Tooltip:
             x = event.x_root
             y = event.y_root
 
-            # Position the tooltip so the right edge is at the cursor position
-            x -= tooltip_width
+            # --- OFFSET ADJUSTMENT ---
+            x_offset = 10      # move right from cursor
+            y_offset = 20      # move down from cursor
+            x += x_offset
+            y += y_offset
 
             # Ensure the tooltip is within the screen bounds
             screen_width = self.widget.winfo_screenwidth()
@@ -80,7 +83,7 @@ def open_folder(folder_name):
 class App:
     def __init__(self, root):
         self.root = root
-        self.root.title("NCAA NEXT Texture Renaming Utility v1.0")
+        self.root.title("NCAA NEXT Texture Renaming Utility v1.1")
         ctk.set_appearance_mode("Dark")
         ctk.set_default_color_theme("assets/theme.json")
 
@@ -184,16 +187,30 @@ class App:
         self.output_text.grid(row=2, column=0, padx=10, pady=10, sticky=ctk.NSEW)
         self.scrollbar.grid(row=2, column=1, sticky=ctk.NS)
 
+        # Frame for checkboxes above run button
+        self.checkbox_frame = ctk.CTkFrame(self.main_frame, fg_color="transparent")
+        self.checkbox_frame.grid(row=3, column=0, columnspan=2, padx=10, pady=5, sticky=ctk.W)
+
+        # Include Team Gloves checkbox
+        self.team_glove = ctk.BooleanVar(value=True)
+        self.team_glove_checkbox = ctk.CTkCheckBox(self.checkbox_frame, text="Include team gloves", variable=self.team_glove, command=self.on_team_glove_checked)
+        self.team_glove_checkbox.pack(side="left", padx=(0, 20))
+        Tooltip(self.team_glove_checkbox, "Must be done at least once per team. Doesn't hurt to leave it checked.")
+        
         # Second Glove Checkbox
         self.second_glove = ctk.BooleanVar()
-        self.second_glove_checkbox = ctk.CTkCheckBox(self.main_frame, text="Opposite Home/Away Glove (Leave disabled unless you know how this works.)", variable=self.second_glove)
-        self.second_glove_checkbox.grid(row=3, column=0, padx=10, pady=5, sticky=ctk.W)
-        Tooltip(self.second_glove_checkbox, "Run with this disabled first. Then again with it enabled. See the README.txt for instructions!")
+        self.second_glove_checkbox = ctk.CTkCheckBox(self.checkbox_frame, text="Opposite Home/Away Glove (See README!)", variable=self.second_glove, command=self.on_second_glove_checked)
+        self.second_glove_checkbox.pack(side="left")
+        Tooltip(self.second_glove_checkbox, "Run with this disabled first. Then again with it enabled. See the README for instructions!")
 
         # Run Function button (larger, at bottom of the main column)
         self.run_button = ctk.CTkButton(self.main_frame, text="Rename Source Textures", font=("Arial", 14, "bold"), command=self.start_function_thread, width=200, height=40)
         self.run_button.grid(row=4, column=0, padx=10, pady=10, sticky=ctk.EW)
         
+
+        # ==== RIGHT COLUMN ================================
+
+
         # Define tags for colors in the tkinter.Text widget
         self.output_text.tag_configure("green", foreground="#40c131")
         self.output_text.tag_configure("blue", foreground="#6a42f6")
@@ -356,11 +373,30 @@ class App:
         # Dumps Folder Path
         self.path_label = ctk.CTkLabel(self.config_frame, text="Dumps Folder Path:")
         self.path_label.grid(row=9, column=0, padx=10, pady=(5, 0), sticky=ctk.W)
+
         self.path_entry = ctk.CTkEntry(self.config_frame)
         self.path_entry.grid(row=10, column=0, padx=10, pady=(3,0), sticky=ctk.EW)
-        self.path_button = ctk.CTkButton(self.config_frame, text="Choose Folder", command=self.browse_folder, fg_color="transparent", border_color="#1f538d", border_width=2)
-        self.path_button.grid(row=11, column=0, padx=10, pady=(3,8), sticky=ctk.W)
+
+        # Frame to hold both buttons
+        self.path_buttons_frame = ctk.CTkFrame(self.config_frame, fg_color="transparent", corner_radius=0)
+        self.path_buttons_frame.grid(row=11, column=0, padx=10, pady=(3,8), sticky=ctk.W)
+
+        self.path_button = ctk.CTkButton(
+            self.path_buttons_frame, text="Choose Folder",
+            command=self.browse_folder, fg_color="transparent",
+            border_color="#1f538d", border_width=2
+        )
+        self.path_button.grid(row=0, column=0, padx=(0, 5))
+
+        self.delete_button = ctk.CTkButton(
+            self.path_buttons_frame, text="Delete Dumps",
+            command=self.delete_dumps, fg_color="transparent",
+            border_color="#d9534f", border_width=2
+        )
+        self.delete_button.grid(row=0, column=1)
+
         Tooltip(self.path_label, "Eg. C:\\PCSX2\\textures\\SLUS-21214\\dumps")
+
 
         # Save Configuration Button
         self.save_button = ctk.CTkButton(self.config_frame, text="Save Configuration", command=self.save_config)
@@ -381,8 +417,19 @@ class App:
 
         # Only Make CSV Checkbox
         self.only_make_csv = ctk.BooleanVar()
-        self.only_make_csv_checkbox = ctk.CTkCheckBox(self.source_button_frame, width=18, height=18, checkbox_width=18, checkbox_height=18, border_width=1, text="Don't rename, only make CSV", variable=self.only_make_csv, font=(sans_font_family, 10))
-        self.only_make_csv_checkbox.pack(padx=5, pady=(5, 15))  # Add padding below the button
+        self.only_make_csv_checkbox = ctk.CTkCheckBox(
+            self.source_button_frame,
+            width=18,
+            height=18,
+            checkbox_width=18,
+            checkbox_height=18,
+            border_width=1,
+            text="Don't rename, only make CSV",
+            variable=self.only_make_csv,
+            font=(sans_font_family, 10),
+            command=self.toggle_other_checkboxes  # <-- Add callback here
+        )
+        self.only_make_csv_checkbox.pack(padx=5, pady=(5, 15))
         Tooltip(self.only_make_csv_checkbox, "Enable if only want to make a CSV file")
 
 
@@ -394,6 +441,13 @@ class App:
         # Update the window height based on content
         self.update_window_height()
 
+    def toggle_other_checkboxes(self):
+        """Enable or disable other checkboxes based on only_make_csv."""
+        state = "disabled" if self.only_make_csv.get() else "normal"
+        self.helmet_checkbox.configure(state=state)
+        self.sleeve_checkbox.configure(state=state)
+        self.pride_checkbox.configure(state=state)
+    
     def add_link_to_csv_text(self, link_text, url):
         # Get the current index before inserting the link
         start_index = self.csv_text.index(tk.INSERT)
@@ -412,6 +466,28 @@ class App:
         self.csv_text.tag_bind("link", "<Button-1>", lambda e: self.open_link(url))
 
 
+    def delete_dumps(self):
+        folder = self.path_entry.get()
+        if not folder or not os.path.isdir(folder):
+            self.update_output("\nError: Please select a valid folder first.\n")
+            return
+
+        png_files = [f for f in os.listdir(folder) if f.lower().endswith(".png")]
+        if not png_files:
+            self.update_output("\nNo PNG files found in the folder.\n")
+            return
+
+        count = 0
+        for file in png_files:
+            file_path = os.path.join(folder, file)
+            try:
+                os.remove(file_path)
+                count += 1
+            except Exception as e:
+                self.update_output(f"\nError deleting {file_path}: {e}\n")
+
+        self.update_output(f"\nDeleted {count} PNG file(s) from the dumps folder. Switch back to PCSX2 and press F9 twice to re-initiate dumping.\nDumps folder: {folder}\n")
+
 
     def open_link(self, url):
         import webbrowser
@@ -422,9 +498,14 @@ class App:
         self.check_csv_folder()
 
     def check_csv_folder(self):
+        # Clear the output window
+        # self.output_text.configure(state=tk.NORMAL)
+        # self.output_text.delete("1.0", tk.END)
+        # self.output_text.configure(state=tk.NORMAL)
+
         self.update_output("\nChecking CSV folder...\n")
         csv_folder = os.path.join(os.getcwd(), 'csv-override')
-        self.update_output(f"CSV folder path: {csv_folder}\n")
+        # self.update_output(f"CSV folder path: {csv_folder}\n")
         
         if not os.path.exists(csv_folder):
             self.update_output("ERROR: CSV folder does not exist.\n", "red")
@@ -436,9 +517,12 @@ class App:
         self.csv_text.configure(state=tk.NORMAL)
         self.csv_text.delete(1.0, tk.END)  # Clear previous text
         
+        self.csv_source_file = ""
+
         if len(csv_files) == 0:
             self.csv_text.configure(state=tk.NORMAL)
             self.csv_text.insert(tk.END, "No CSV found. Ready to search the dumps folder. NOTE: Dumping must be done in a very specific way! ")
+            self.csv_source_file = ""
             # Insert the clickable link
             self.add_link_to_csv_text("Click here for the guide →", "https://docs.google.com/document/d/1RI2ceiXVRgVu8H-POCee2n3O08iQxa_Q/edit#heading=h.inb40xudxrzt")
             self.csv_text.insert(tk.END, "\n\n")
@@ -452,6 +536,7 @@ class App:
             self.path_entry.configure(state="normal")
             self.path_button.configure(state="normal")
             self.second_glove_checkbox.configure(state="normal")
+            self.team_glove_checkbox.configure(state="normal")
             self.team_name_entry.configure(state="normal")
             self.slot_entry.configure(state="normal")
             self.increment_button.configure(state="normal")
@@ -459,10 +544,64 @@ class App:
             self.uniform_type_label.configure(state="normal")
             self.dark_radio.configure(state="normal")
             self.light_radio.configure(state="normal")
+            if self.only_make_csv == "no":
+              self.helmet_checkbox.configure(state="normal")
+              self.sleeve_checkbox.configure(state="normal")
+              self.pride_checkbox.configure(state="normal")
+            self.only_make_csv_checkbox.configure(state="normal")
             self.header_label.configure(text="Dumps Image Recognition")
             self.update_output("No CSV found. Ready to search the dumps folder.\n\n")
         elif len(csv_files) == 1:
-            self.update_csv_text("CSV provided. Skipping dumps image matching. Using texture names in CSV.")
+            self.update_output(f"CSV folder path: {csv_folder}\n")
+            self.update_output(f"Found CSV file: {csv_files}\n\n")
+            csv_source_folder = os.path.join(os.getcwd(), 'csv-source')
+            self.update_output("Checking if a SOURCE CSV exists...\n")
+            if os.path.exists(csv_source_folder):
+              csv_source_files = [
+                  os.path.join(root, f)
+                  for root, _, files in os.walk(csv_source_folder)
+                  for f in files
+                  if f.endswith('.csv')
+              ]
+              
+              # Check for PNG files
+              png_source_files = [
+                  os.path.join(root, f)
+                  for root, _, files in os.walk(csv_source_folder)
+                  for f in files
+                  if f.lower().endswith('.png')
+              ]
+              folder_no_pngs = (len(png_source_files) == 0)
+              folder_has_pngs = (len(png_source_files) > 0)
+
+              if len(csv_source_files) == 0 and folder_no_pngs:
+                  # Folder is completely empty
+                  self.update_csv_text("CSV provided. Skipping dumps image matching. Using texture names in CSV.")
+                  self.update_output("No source CSV provided in 'csv-source'. Folder is empty. Using source textures in YOUR_TEXTURES_HERE.\n")
+
+              elif len(csv_source_files) == 0 and folder_has_pngs:
+                  # Folder has files or folders but no CSVs
+                  self.update_csv_text("No CSV found. Using textures in YOUR_TEXTURES_HERE for matching.")
+                  self.update_output("!!! ATTENTION !!! ", "yellow")
+                  self.update_output("No CSV provided in 'csv-source', but other files/folders were found. Did you mean to provide a source uniform? If not, you can ignore this message. Renaming will use the source textures in YOUR_TEXTURES_HERE.\n")
+
+              elif len(csv_source_files) == 1 and folder_no_pngs:
+                 self.csv_source_file = csv_source_files[0]
+                 self.update_csv_text("A source CSV was found, but no textures were provided in 'csv-source'. Add a complete uniform folder and refresh the app.", "red")
+                 self.update_output("!!! ERROR !!! ", "red")
+                 self.update_output("A source CSV was found, but no textures were provided in 'csv-source'. Add a complete uniform folder and refresh the app.\n")
+              
+              elif len(csv_source_files) == 1 and folder_has_pngs:
+                 self.csv_source_file = csv_source_files[0]
+                 self.update_csv_text("CSVs provided. Skipping dumps image matching. Using texture names in 'csv-override' folder. Using source textures and CSV in 'csv-source' folder.")
+                 self.update_output("A source CSV was provided. Using the textures in csv-source folder for renaming.\n")
+              else:
+                self.update_csv_text("More than one CSV provided in csv-source. Remove all but one CSV (or all to use textures in YOUR_TEXTURES_HERE for the source files).", "red")
+                self.update_output("!!! ERROR !!! ", "red")
+                self.update_output("More than one CSV provided in csv-source. Remove all but one CSV (or all to use textures in YOUR_TEXTURES_HERE for the source files).", "red")
+            else:
+              self.update_output("No source CSV and textures provided. Using the YOUR_TEXTURES_HERE folder.\n")
+
             self.run_button.configure(
                 text="Rename Source Textures",
                 command=self.start_function_thread,
@@ -471,7 +610,10 @@ class App:
             self.path_label.configure(state="disabled")
             self.path_entry.configure(state="disabled")
             self.path_button.configure(state="disabled")
+            self.second_glove.set(False)
+            self.team_glove.set(False)
             self.second_glove_checkbox.configure(state="disabled")
+            self.team_glove_checkbox.configure(state="disabled")
             self.team_name_entry.configure(state="disabled")
             self.slot_entry.configure(state="disabled")
             self.increment_button.configure(state="disabled")
@@ -479,11 +621,18 @@ class App:
             self.uniform_type_label.configure(state="disabled")
             self.dark_radio.configure(state="disabled")
             self.light_radio.configure(state="disabled")
+            self.helmet_checkbox.configure(state="normal")
+            self.sleeve_checkbox.configure(state="normal")
+            self.pride_checkbox.configure(state="normal")
             self.header_label.configure(text="CSV Renaming")
-            self.update_output(f"Found CSV file: {csv_files}\n\n")
+            self.only_make_csv.set(False)
+            self.only_make_csv_checkbox.configure(state="disabled")
+            
+            
             self.process_csv(os.path.join(csv_folder, csv_files[0]))  # Process the CSV file
         else:
             self.update_csv_text("More than one CSV provided. Remove all but one CSV (or all to search dumps).", "red")
+            self.update_output("More than one CSV provided. Remove all but one CSV (or all to search dumps).", "red")
             self.run_button.configure(state="disabled")
             self.header_label.configure(text="CSV Renaming (ERROR)")
             self.update_output("ERROR: Multiple CSV files found. Remove all but one.\n\n", "red")
@@ -544,6 +693,11 @@ class App:
         open_folder('RENAMED')
 
     def start_function_thread(self):
+        # Clear the output window
+        self.output_text.configure(state=tk.NORMAL)
+        self.output_text.delete("1.0", tk.END)
+        self.output_text.configure(state=tk.NORMAL)
+
         # Collect values from the GUI
         dumps_path = self.path_entry.get()
 
@@ -554,6 +708,7 @@ class App:
 
         uniform_type = self.uniform_type.get()
         second_glove = "yes" if self.second_glove.get() else "no"
+        team_glove = "yes" if self.team_glove.get() else "no"
         photoshop_pref = "1"  # Default value
         pridesticker_pref = "yes" if self.pride_stickers.get() else "no"
         helmetnumbers_pref = "yes" if self.helmet_numbers.get() else "no"
@@ -561,9 +716,14 @@ class App:
         only_make_csv = "yes" if self.sleeve_numbers.get() else "no"
         
         # Start the function in a separate thread to avoid freezing the GUI
-        threading.Thread(target=self.run_function_with_output, args=(dumps_path, uniform_slot_name, uniform_type, second_glove, photoshop_pref, pridesticker_pref, helmetnumbers_pref, ssnumbers_pref, only_make_csv), daemon=True).start()
+        threading.Thread(target=self.run_function_with_output, args=(dumps_path, uniform_slot_name, uniform_type, team_glove, second_glove, photoshop_pref, pridesticker_pref, helmetnumbers_pref, ssnumbers_pref, only_make_csv, self.csv_source_file), daemon=True).start()
     
     def start_dumpsfinder_thread(self):
+        # Clear the output window
+        self.output_text.configure(state=tk.NORMAL)
+        self.output_text.delete("1.0", tk.END)
+        self.output_text.configure(state=tk.NORMAL)
+
         # Collect values from the GUI
         dumps_path = self.path_entry.get()
 
@@ -573,6 +733,7 @@ class App:
         uniform_slot_name = f"{team_name}-{slot}"  # Concatenate with a dash
 
         uniform_type = self.uniform_type.get()
+        team_glove = "yes" if self.team_glove.get() else "no"
         second_glove = "yes" if self.second_glove.get() else "no"
         photoshop_pref = "1"  # Default value
         pridesticker_pref = "yes" if self.pride_stickers.get() else "no"
@@ -581,17 +742,17 @@ class App:
         only_make_csv = "yes" if self.only_make_csv.get() else "no"
         
         # Start the function in a separate thread to avoid freezing the GUI
-        threading.Thread(target=self.run_dumpsfinder_with_output, args=(dumps_path, uniform_slot_name, uniform_type, second_glove, photoshop_pref, pridesticker_pref, helmetnumbers_pref, ssnumbers_pref, only_make_csv), daemon=True).start()
+        threading.Thread(target=self.run_dumpsfinder_with_output, args=(dumps_path, uniform_slot_name, uniform_type, team_glove, second_glove, photoshop_pref, pridesticker_pref, helmetnumbers_pref, ssnumbers_pref, only_make_csv), daemon=True).start()
 
-    def run_function_with_output(self, dumps_path, uniform_slot_name, uniform_type, second_glove, photoshop_pref, pridesticker_pref, helmetnumbers_pref, ssnumbers_pref, only_make_csv):
+    def run_function_with_output(self, dumps_path, uniform_slot_name, uniform_type, team_glove, second_glove, photoshop_pref, pridesticker_pref, helmetnumbers_pref, ssnumbers_pref, only_make_csv, csv_source_file):
         try:
             # Use the run_function from utils/functions.py and pass the callback for output
-            run_function(self.update_output, dumps_path, uniform_slot_name, uniform_type, second_glove, photoshop_pref, pridesticker_pref, helmetnumbers_pref, ssnumbers_pref, only_make_csv)
+            run_function(self.update_output, dumps_path, uniform_slot_name, uniform_type, team_glove, second_glove, photoshop_pref, pridesticker_pref, helmetnumbers_pref, ssnumbers_pref, only_make_csv, csv_source_file)
         except Exception as e:
             self.update_output(f"Error occurred: {str(e)}", "red")
             self.error_event.set()  # Signal that an error occurred
 
-    def run_dumpsfinder_with_output(self, dumps_path, uniform_slot_name, uniform_type, second_glove, photoshop_pref, pridesticker_pref, helmetnumbers_pref, ssnumbers_pref, only_make_csv):
+    def run_dumpsfinder_with_output(self, dumps_path, uniform_slot_name, uniform_type, team_glove, second_glove, photoshop_pref, pridesticker_pref, helmetnumbers_pref, ssnumbers_pref, only_make_csv):
         try:
             # Check if dumps_path is not defined or the folder does not exist
             if not dumps_path or not os.path.exists(dumps_path):
@@ -600,7 +761,7 @@ class App:
                 self.error_event.set()  # Signal that an error occurred
                 return
             # Use the run_function from utils/functions.py and pass the callback for output
-            self.dumps_finder.run_dumpsfinder(self.update_output, dumps_path, uniform_slot_name, uniform_type, second_glove, photoshop_pref, pridesticker_pref, helmetnumbers_pref, ssnumbers_pref, only_make_csv)
+            self.dumps_finder.run_dumpsfinder(self.update_output, dumps_path, uniform_slot_name, uniform_type, team_glove, second_glove, photoshop_pref, pridesticker_pref, helmetnumbers_pref, ssnumbers_pref, only_make_csv)
         except Exception as e:
             self.update_output(f"Error occurred: {str(e)}", "red")
             self.error_event.set()  # Signal that an error occurred
@@ -697,6 +858,15 @@ class App:
         self.root.update_idletasks()  # Ensure that all layout updates are processed
         height = self.root.winfo_reqheight()  # Get the required height
         self.root.geometry(f"950x{height}")  # Set the width and height
+
+    # Callback function for second glove checkbox
+    def on_second_glove_checked(self):
+        if self.second_glove.get():  # If second_glove_checkbox is checked
+            self.team_glove.set(False)  # Uncheck team_glove_checkbox
+    # Callback function for team glove checkbox
+    def on_team_glove_checked(self):
+        if self.team_glove.get():  # If team_glove_checkbox is checked
+            self.second_glove.set(False)  # Uncheck second_glove_checkbox
 
 if __name__ == "__main__":
     root = ctk.CTk()
