@@ -1,6 +1,6 @@
 [Settings]
-dumps_path = r"/Users/j/Library/Application Support/AetherSX2/textures-DUMPING/SLUS-21214/dumps"
-uniform_slot_name = cincinnati-home
+dumps_path = r"C:/PCSX2/textures/SLUS-21214/dumps"
+uniform_slot_name = notredame-home
 uniform_type = dark
 photoshop_pref = 1
 pridesticker_pref = no
