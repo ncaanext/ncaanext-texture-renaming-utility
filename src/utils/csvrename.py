@@ -1018,7 +1018,12 @@ def run_function(callback, dumps_path, uniform_slot_name, uniform_type, team_glo
         for idx, (filename, paths) in enumerate(duplicate_sets.items(), start=1):
             callback(f"\nDuplicate Set {idx}:\n")
             for path in paths:
-                callback(path)
+                # Trim everything before "RENAMED"
+                try:
+                    short_path = path[path.index("RENAMED"):]
+                except ValueError:
+                    short_path = path
+                callback(f"• {short_path}")
                 callback("\n")  
         callback("\n")
         callback("\n")
@@ -1035,3 +1040,109 @@ def run_function(callback, dumps_path, uniform_slot_name, uniform_type, team_glo
         callback(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n", "red")
     else:
         callback("Passed duplicate PNG files check. All filenames in RENAMED are unique.\n")
+
+    ############################################################################
+    def find_duplicate_items_in_csvs(folder):
+        """
+        Recursively checks all CSV files in `folder` for duplicate FILENAME values.
+        Returns a dict mapping each duplicate filename to the list of CSVs where it appears.
+        """
+
+        # callback("\nStarting duplicate FILENAME check across all CSV files...\n\n")
+
+        filename_map = {}  # key = FILENAME value, value = list of CSV paths
+
+        for root, dirs, files in os.walk(folder):
+            for file in files:
+                if not file.lower().endswith(".csv"):
+                    continue
+
+                file_path = os.path.join(root, file)
+
+                try:
+                    with open(file_path, "r", encoding="utf-8-sig", newline="") as f:
+                        reader = csv.reader(f)
+                        header = next(reader, None)
+
+                        if not header:
+                            continue
+
+                        # Normalize headers
+                        header = [h.strip().upper() for h in header]
+
+                        if "FILENAME" not in header:
+                            continue
+
+                        filename_index = header.index("FILENAME")
+
+                        # Extract all FILENAME values
+                        for row in reader:
+                            if len(row) <= filename_index:
+                                continue
+                            val = row[filename_index].strip()
+                            if val:
+                                filename_map.setdefault(val, []).append(file_path)
+
+                except Exception as e:
+                    print(f"⚠️ Error reading {file_path}: {e}")
+                    continue
+
+        # Filter out entries that only occur once
+        duplicate_sets = {file: sorted(paths) for file, paths in filename_map.items() if len(paths) > 1}
+
+        return duplicate_sets
+
+
+
+
+
+    folder_to_check = os.path.join(base_dir, "RENAMED")
+
+    duplicate_sets = find_duplicate_items_in_csvs(folder_to_check)
+
+    if duplicate_sets:
+        callback("\n")
+        callback(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n", "red")
+        callback("******  ")
+        callback("WARNING: ", "red")
+        callback("Duplicate FILENAME entries found in CSV files!  *******\n")
+        callback("*                                                      *\n")
+        callback("*          SEE BELOW FOR DETAILS                       *\n")
+        callback("*                                                      *\n")
+        callback("*     You may have dumped the same uniform twice.      *\n")
+        callback("*    Correct it and redump. No two files can have      *\n")
+        callback("*        the same name anywhere in replacements.       *\n")
+        callback("*                                                      *\n")
+        callback("********************************************************\n")
+
+        for idx, (filename, paths) in enumerate(duplicate_sets.items(), start=1):
+            callback(f"\nDuplicate Set {idx}:\n")
+            callback(f"Filename: {filename}\n")
+            for path in paths:
+                # Trim everything before "RENAMED"
+                try:
+                    short_path = path[path.index("RENAMED"):]
+                except ValueError:
+                    short_path = path
+                callback(f"• {short_path}")
+                callback("\n")
+
+        callback("\n")
+        callback("******  ")
+        callback("WARNING: ", "red")
+        callback("Duplicate FILENAME entries found in CSV files!  *******\n")
+        callback("*                                                      *\n")
+        callback("*              SEE ABOVE FOR DETAILS                   *\n")
+        callback("*                                                      *\n")
+        callback("*     You may have dumped the same uniform twice.      *\n")
+        callback("*    Correct it and redump. No two files can have      *\n")
+        callback("*        the same name anywhere in replacements.       *\n")
+        callback("*                                                      *\n")
+        callback("********************************************************\n")
+        callback(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n", "red")
+
+    else:
+        callback("✅ Passed CSV FILENAME duplicate check.\n")
+        callback("Ready for next round if no red errors above.\n")
+        callback("\n")
+        callback("REMEMBER TO DELETE YOUR DUMPS PRIOR TO DUMPING THE NEXT GAME.\n")

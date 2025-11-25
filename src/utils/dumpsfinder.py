@@ -1021,6 +1021,7 @@ class DumpsFinder:
                               csv_writer.writerow({'TEAM NAME': teamname, 'SLOT': slotname, 'TYPE': uniform_type, 'TEXTURE': file, 'FILENAME': new_file_name})
                               callback(f"{checkmark} ", "green")
                               callback(f"SUCCESS. Filename added to the CSV file.\n")
+                              self.required_textures_counter += 1
 
                     # Glove - Uniform 2
                     elif file == "glove-uni-2.png":
@@ -1060,6 +1061,7 @@ class DumpsFinder:
                               csv_writer.writerow({'TEAM NAME': teamname, 'SLOT': slotname, 'TYPE': uniform_type, 'TEXTURE': file, 'FILENAME': new_file_name})
                               callback(f"{checkmark} ", "green")
                               callback(f"SUCCESS. Filename added to the CSV file.\n")
+                              self.required_textures_counter += 1
                     
                     # Second Glove
                     elif glove_normal_or_csv and file in ("glove-uni-1-second.png", "glove-uni-2-second.png"):
@@ -1103,6 +1105,7 @@ class DumpsFinder:
                               csv_writer.writerow({'TEAM NAME': teamname, 'SLOT': slotname, 'TYPE': uniform_type, 'TEXTURE': file, 'FILENAME': new_file_name})
                               callback(f"{checkmark} ", "green")
                               callback(f"SUCCESS. Filename added to the CSV file.\n")
+                              self.required_textures_counter += 1
 
                             
 
@@ -1144,6 +1147,7 @@ class DumpsFinder:
                             csv_writer.writerow({'TEAM NAME': teamname, 'SLOT': slotname, 'TYPE': uniform_type, 'TEXTURE': file, 'FILENAME': new_file_name})
                             callback(f"{checkmark} ", "green")
                             callback(f"SUCCESS. Filename added to the CSV file.\n")
+                            self.required_textures_counter += 1
                     
                     # If answered yes to transparent pride sticker, copy the transparent image instead of a source image
                     elif file == "pridesticker.png":
@@ -1643,7 +1647,12 @@ class DumpsFinder:
             for idx, (filename, paths) in enumerate(duplicate_sets.items(), start=1):
                 callback(f"\nDuplicate Set {idx}:\n")
                 for path in paths:
-                    callback(path)
+                    # Trim everything before "RENAMED"
+                    try:
+                        short_path = path[path.index("RENAMED"):]
+                    except ValueError:
+                        short_path = path
+                    callback(f"• {short_path}")
                     callback("\n")  
             callback("\n")
             callback("\n")
@@ -1745,8 +1754,14 @@ class DumpsFinder:
 
             for idx, (filename, paths) in enumerate(duplicate_sets.items(), start=1):
                 callback(f"\nDuplicate Set {idx}:\n")
+                callback(f"Filename: {filename}\n")
                 for path in paths:
-                    callback(path)
+                    # Trim everything before "RENAMED"
+                    try:
+                        short_path = path[path.index("RENAMED"):]
+                    except ValueError:
+                        short_path = path
+                    callback(f"• {short_path}")
                     callback("\n")
 
             callback("\n")
