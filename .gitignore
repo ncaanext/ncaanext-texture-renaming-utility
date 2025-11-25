@@ -2,13 +2,14 @@
 ################################################
 # Project-specific ignores
 ################################################
-RENAMED/
-RENAMED-DONE/
-RENAMED-DONE-OLD/
-csv-override/*
-!csv-override/.gitkeep
-csv-source/*
-!csv-source/.gitkeep
+src/RENAMED/*
+!src/RENAMED/.gitkeep
+src/RENAMED-DONE/
+src/RENAMED-DONE-OLD/
+src/csv-override/*
+!src/csv-override/.gitkeep
+src/csv-source/*
+!src/csv-source/.gitkeep
 dist/
 build/
 *.spec
@@ -26,9 +27,9 @@ check-for-dupes.bat
 config-GITHUB.txt
 config-DEV.txt
 _REVERSE-RENAME-UNIFORM-PARTS.sh
-YOUR_TEXTURES_HERE/*
-!YOUR_TEXTURES_HERE/.gitkeep
-YOUR_TEXTURES_HERE-DEV
+src/YOUR_TEXTURES_HERE/*
+!src/YOUR_TEXTURES_HERE/.gitkeep
+src/YOUR_TEXTURES_HERE-DEV
 
 ############################################
 # Global across projects system files, etc. 
