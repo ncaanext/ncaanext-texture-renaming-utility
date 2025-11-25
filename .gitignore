@@ -5,6 +5,10 @@
 RENAMED/
 RENAMED-DONE/
 RENAMED-DONE-OLD/
+csv-override/*
+!csv-override/.gitkeep
+csv-source/*
+!csv-source/.gitkeep
 dist/
 build/
 *.spec
@@ -22,6 +26,8 @@ check-for-dupes.bat
 config-GITHUB.txt
 config-DEV.txt
 _REVERSE-RENAME-UNIFORM-PARTS.sh
+YOUR_TEXTURES_HERE/*
+!YOUR_TEXTURES_HERE/.gitkeep
 YOUR_TEXTURES_HERE-DEV
 
 ############################################
