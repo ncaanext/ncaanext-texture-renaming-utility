@@ -2,6 +2,9 @@
 ################################################
 # Project-specific ignores
 ################################################
+config.txt
+config-GITHUB.txt
+config-DEV.txt
 src/RENAMED/*
 !src/RENAMED/.gitkeep
 src/RENAMED-DONE/
@@ -24,8 +27,6 @@ default-textures.zip
 put_exported_textures_in_here.zip
 gather-csv.sh
 check-for-dupes.bat
-config-GITHUB.txt
-config-DEV.txt
 _REVERSE-RENAME-UNIFORM-PARTS.sh
 src/YOUR_TEXTURES_HERE/*
 !src/YOUR_TEXTURES_HERE/.gitkeep
